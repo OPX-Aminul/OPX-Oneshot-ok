@@ -403,6 +403,10 @@ while true; do
     echo -e "\033[1;31m[!] Invalid choice. Enter a number between 1 and ${IFACE_COUNT}.\033[0m"
 done
 
+# Trim any accidental CR / leading-trailing whitespace from the selected name
+# (e.g. install.sh edited on Windows can leave CRLF, which would break "-i wlan0").
+SELECTED=$(printf '%s' "$SELECTED" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
@@ -416,6 +420,7 @@ for arg in "$@"; do
 done
 
 # ── Run OneShot with -k (kill) and -K (Pixie Dust) by default ─
+echo -e "\033[90m[~] Launching: python3 $TOOL -i $SELECTED -k -K$CLEAN_ARGS\033[0m"
 exec python3 "$TOOL" -i "$SELECTED" -k -K $CLEAN_ARGS
 WIFI4_EOF
 
