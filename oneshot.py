@@ -1349,13 +1349,11 @@ class WiFiScanner:
 
         def handle_wps(line, result, networks):
             networks[-1]['WPS'] = True
-
-        def handle_wpsVersion(line, result, networks):
-            wps_ver = networks[-1]['WPS version']
-            wps_ver_filtered = result.group(1).replace('* Version2:', '')
-            if wps_ver_filtered == '2.0':
-                wps_ver = '2.0'
-            networks[-1]['WPS version'] = wps_ver
+            # Capture the real reported WPS version (e.g. '1.0') so we don't
+            # overwrite it later with the WPS-2.0 *capability* flag.
+            ver = result.group(1).strip()
+            if ver:
+                networks[-1]['WPS version'] = ver
 
         def handle_wpsLocked(line, result, networks):
             flag = int(result.group(1), 16)
@@ -1385,15 +1383,14 @@ class WiFiScanner:
             re.compile(r'SSID: (.*)'): handle_essid,
             re.compile(r'signal: ([+-]?([0-9]*[.])?[0-9]+) dBm'): handle_level,
             re.compile(r'(capability): (.+)'): handle_securityType,
-            re.compile(r'(RSN):\t [*] Version: (\d+)'): handle_securityType,
-            re.compile(r'(WPA):\t [*] Version: (\d+)'): handle_securityType,
-            re.compile(r'WPS:\t [*] Version: (([0-9]*[.])?[0-9]+)'): handle_wps,
-            re.compile(r' [*] Version2: (.+)'): handle_wpsVersion,
-            re.compile(r' [*] Authentication suites: (.+)'): handle_securityType,
-            re.compile(r' [*] AP setup locked: (0x[0-9]+)'): handle_wpsLocked,
-            re.compile(r' [*] Model: (.*)'): handle_model,
-            re.compile(r' [*] Model Number: (.*)'): handle_modelNumber,
-            re.compile(r' [*] Device name: (.*)'): handle_deviceName
+            re.compile(r'(RSN):\t \[\*\] Version: (\d+)'): handle_securityType,
+            re.compile(r'(WPA):\t \[\*\] Version: (\d+)'): handle_securityType,
+            re.compile(r'WPS:\t \[\*\] Version: (([0-9]*[.])?[0-9]+)'): handle_wps,
+            re.compile(r' \[\*\] Authentication suites: (.+)'): handle_securityType,
+            re.compile(r' \[\*\] AP setup locked: (0x[0-9]+)'): handle_wpsLocked,
+            re.compile(r' \[\*\] Model: (.*)'): handle_model,
+            re.compile(r' \[\*\] Model Number: (.*)'): handle_modelNumber,
+            re.compile(r' \[\*\] Device name: (.*)'): handle_deviceName
         }
 
         for line in lines:
@@ -1531,12 +1528,12 @@ class WiFiScanner:
             model = '{} {}'.format(network['Model'], network['Model number']).strip()
             if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
                 return '\033[93m', 'ATTACKED'
-            elif network['WPS locked']:
-                return '\033[91m', 'LOCKED'
             elif self.vuln_list and model and model in self.vuln_list:
                 return '\033[92m', 'VULNERABLE'
             elif network['WPS version'] == '1.0':
                 return '\033[92m', 'WPS-1.0'
+            elif network['WPS locked']:
+                return '\033[91m', 'LOCKED'
             else:
                 return '\033[96m', ''
 
