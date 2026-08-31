@@ -11,7 +11,7 @@ OneShot is a powerful WPS (Wi-Fi Protected Setup) penetration testing tool that 
 - **Auto PIN Generation** — Generates likely PINs based on MAC address algorithms
 - **WPS Version Detection** — Identifies WPS 1.0 vs 2.0 (1.0 = potentially vulnerable)
 - **WPS Lock Handling** — Auto-retries after WPS lock with configurable timeout
-- **Process Interference Detection** — Kills conflicting processes (`-k` flag)
+- **Process Interference Detection** — Kills conflicting processes (`-k` flag, always on via wifi4)
 - **Real-Time Logger** — Timestamped, color-coded terminal output
 - **Vulnerability Database** — 600+ known vulnerable device models
 - **Session Save/Restore** — Resume bruteforce from where you left off
@@ -28,7 +28,7 @@ sudo bash install.sh
 
 After installation, just run:
 ```bash
-sudo wififour
+sudo wifi4
 ```
 
 That's it! It will auto-detect WiFi interfaces, ask you to select one, and launch the tool with `-k` (kill interfering processes) automatically.
@@ -38,7 +38,7 @@ That's it! It will auto-detect WiFi interfaces, ask you to select one, and launc
 | Distro | Package Manager | Status |
 |--------|----------------|--------|
 | Debian / Ubuntu / Linux Mint | `apt` | ✅ |
-| Alpine Linux | `apk` | ✅ |
+| Alpine Linux | `apk --no-cache` | ✅ |
 | Arch / Manjaro | `pacman` | ✅ |
 | Fedora / RHEL / CentOS | `dnf` / `yum` | ✅ |
 | openSUSE / SLES | `zypper` | ✅ |
@@ -52,16 +52,16 @@ If you prefer manual installation:
 ### Dependencies
 ```bash
 # Debian/Ubuntu
-sudo apt install python3 python3-pip iw wpa_supplicant pixiewps iproute2
+sudo apt install python3 python3-pip python3-dev git iw wpa_supplicant pixiewps iproute2
 
 # Alpine
-sudo apk add python3 py3-pip iw wpa_supplicant pixiewps iproute2
+sudo apk add --no-cache python3 py3-pip python3-dev git iw wireless-tools wpa_supplicant iproute2
 
 # Arch
-sudo pacman -S python python-pip iw wpa_supplicant pixiewps iproute2
+sudo pacman -S python python-pip git iw wpa_supplicant pixiewps iproute2
 
 # Fedora
-sudo dnf install python3 python3-pip iw wpa_supplicant pixiewps iproute2
+sudo dnf install python3 python3-pip python3-devel git iw wpa_supplicant pixiewps iproute2
 ```
 
 ### Python Dependencies
@@ -73,32 +73,32 @@ pip3 install wcwidth
 
 ### Quick Start (after install)
 ```bash
-sudo wififour
+sudo wifi4
 ```
 
 ### Attack Modes
 
 ```bash
 # Pixie Dust attack (offline PIN recovery)
-sudo wififour -K
+sudo wifi4 -K
 
 # Online bruteforce
-sudo wififour -B
+sudo wifi4 -B
 
 # Push Button Connect
-sudo wififour --pbc
+sudo wifi4 --pbc
 
 # Null PIN attack
-sudo wififour -N
+sudo wifi4 -N
 
 # Direct target with specific PIN
-sudo wififour -b <BSSID> -p <PIN>
+sudo wifi4 -b <BSSID> -p <PIN>
 
 # Pixie Dust with full range brute
-sudo wififour -K -F
+sudo wifi4 -K -F
 
 # Show pixiewps command
-sudo wififour -K -X
+sudo wifi4 -K -X
 ```
 
 ### All Options
@@ -164,6 +164,11 @@ When an AP locks WPS after failed attempts:
 - Tool detects M2D messages and WSC_NACK responses
 - Waits configurable timeout (default 60s)
 - Retries automatically with the same PIN
+
+### WPS Version Detection
+The scanner automatically detects and displays the WPS version for each network:
+- **WPS 1.0** — Potentially vulnerable (highlighted green in scan list)
+- **WPS 2.0** — Standard, more secure
 
 ## ⚠️ Disclaimer
 

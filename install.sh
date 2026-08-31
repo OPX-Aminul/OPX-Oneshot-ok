@@ -15,7 +15,7 @@ RESET='\033[0m'
 
 INSTALL_DIR="/usr/local/bin"
 SCRIPT_NAME="oneshot"
-COMMAND_NAME="wififour"
+COMMAND_NAME="wifi4"
 TOOL_DIR="/opt/oneshot"
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -53,57 +53,61 @@ install_packages() {
             info "Installing packages via apt..."
             apt-get update -qq
             apt-get install -y -qq python3 python3-pip python3-dev \
-                iw wpa_supplicant pixiewps iproute2 wcwidth 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 wcwidth 2>/dev/null || \
             apt-get install -y python3 python3-pip python3-dev \
-                iw wpa_supplicant iproute2 2>/dev/null
+                git iw wpa_supplicant iproute2 2>/dev/null
             ;;
         alpine)
-            info "Installing packages via apk..."
-            apk update --quiet
-            apk add --quiet python3 py3-pip python3-dev \
-                iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
-            apk add --quiet python3 py3-pip python3-dev \
-                iw wpa_supplicant iproute2 2>/dev/null
+            info "Installing packages via apk (--no-cache)..."
+            # Alpine: use --no-cache to avoid stale index
+            # python3-dev for building, wireless-tools for iwconfig fallback
+            apk add --no-cache \
+                python3 py3-pip python3-dev \
+                git iw wireless-tools wpa_supplicant iproute2 2>/dev/null || \
+            apk add --no-cache \
+                python3 py3-pip \
+                git iw wpa_supplicant iproute2 2>/dev/null || \
+            error "Failed to install Alpine packages. Try manually: apk add python3 py3-pip git iw wpa_supplicant iproute2"
             ;;
         arch|manjaro|endeavouros)
             info "Installing packages via pacman..."
             pacman -Sy --noconfirm python python-pip python-wcwidth \
-                iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
             pacman -Sy --noconfirm python python-pip \
-                iw wpa_supplicant iproute2
+                git iw wpa_supplicant iproute2
             ;;
         fedora|rhel|centos|rocky|almalinux)
             info "Installing packages via dnf/yum..."
             dnf install -y python3 python3-pip python3-devel \
-                iw wpa_supplicant pixiewps iproute 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute 2>/dev/null || \
             yum install -y python3 python3-pip python3-devel \
-                iw wpa_supplicant iproute 2>/dev/null || \
+                git iw wpa_supplicant iproute 2>/dev/null || \
             error "Failed to install packages. Install manually: python3, iw, wpa_supplicant, iproute2"
             ;;
         opensuse*|sles)
             info "Installing packages via zypper..."
             zypper install -y python3 python3-pip python3-devel \
-                iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
             zypper install -y python3 python3-pip python3-devel \
-                iw wpa_supplicant iproute2
+                git iw wpa_supplicant iproute2
             ;;
         void)
             info "Installing packages via xbps..."
             xbps-install -SuY python3 python3-pip \
-                iw wpa_supplicant pixiewps iproute2
+                git iw wpa_supplicant pixiewps iproute2
             ;;
         *)
             warn "Unknown distro (${DISTRO_ID}). Trying common package managers..."
             if command -v apt-get &>/dev/null; then
-                apt-get update -qq && apt-get install -y python3 python3-pip iw wpa_supplicant iproute2
+                apt-get update -qq && apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2
             elif command -v apk &>/dev/null; then
-                apk add --quiet python3 py3-pip iw wpa_supplicant iproute2
+                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2
             elif command -v pacman &>/dev/null; then
-                pacman -Sy --noconfirm python python-pip iw wpa_supplicant iproute2
+                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2
             elif command -v dnf &>/dev/null; then
-                dnf install -y python3 python3-pip iw wpa_supplicant iproute2
+                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2
             elif command -v zypper &>/dev/null; then
-                zypper install -y python3 python3-pip iw wpa_supplicant iproute2
+                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2
             else
                 error "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2"
             fi
@@ -164,15 +168,15 @@ install_oneshot() {
     info "Installed oneshot.py → ${TOOL_DIR}/oneshot.py"
 }
 
-# ── Create wififour command ───────────────────────────────────
+# ── Create wifi4 command ──────────────────────────────────────
 
-create_wififour() {
+create_wifi4() {
     info "Creating ${COMMAND_NAME} command..."
 
-    cat > "${INSTALL_DIR}/${COMMAND_NAME}" << 'WIFIFOUR_EOF'
+    cat > "${INSTALL_DIR}/${COMMAND_NAME}" << 'WIFI4_EOF'
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  wififour — OneShot WPS Attack Tool Launcher
+#  wifi4 — OneShot WPS Attack Tool Launcher
 #  Auto-detects WiFi interfaces, prompts user, runs with -k
 # ═══════════════════════════════════════════════════════════════
 
@@ -186,7 +190,7 @@ if [ ! -f "$TOOL" ]; then
 fi
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo -e "\033[1;31m[!] Run as root: sudo wififour\033[0m"
+    echo -e "\033[1;31m[!] Run as root: sudo wifi4\033[0m"
     exit 1
 fi
 
@@ -212,6 +216,22 @@ while IFS= read -r iface; do
         INTERFACES+=("$iface")
     fi
 done < <(ip link show 2>/dev/null | awk -F': ' '/^[0-9]+:/{gsub(/@.*/, "", $2); print $2}' | grep -E '^(wlan|wlp|ath|wlx)')
+
+# Fallback: also check iwconfig for systems where iw is not installed
+if [ ${#INTERFACES[@]} -eq 0 ] && command -v iwconfig &>/dev/null; then
+    while IFS= read -r iface; do
+        found=0
+        for existing in "${INTERFACES[@]}"; do
+            if [ "$existing" = "$iface" ]; then
+                found=1
+                break
+            fi
+        done
+        if [ "$found" -eq 0 ]; then
+            INTERFACES+=("$iface")
+        fi
+    done < <(iwconfig 2>/dev/null | awk '{print $1}' | grep -v "lo\|eth")
+fi
 
 # Remove 'lo' and empty entries
 FILTERED=()
@@ -250,7 +270,7 @@ echo ""
 
 # ── Run OneShot with -k (kill interfering processes) ──────────
 exec python3 "$TOOL" -i "$SELECTED" -k "$@"
-WIFIFOUR_EOF
+WIFI4_EOF
 
     chmod +x "${INSTALL_DIR}/${COMMAND_NAME}"
     info "Created command: ${INSTALL_DIR}/${COMMAND_NAME}"
@@ -271,7 +291,7 @@ main() {
     install_python_deps
     check_requirements
     install_oneshot
-    create_wififour
+    create_wifi4
 
     echo ""
     echo -e "${GREEN}╔══════════════════════════════════════════════════╗${RESET}"
@@ -279,10 +299,11 @@ main() {
     echo -e "${GREEN}╚══════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${CYAN}Usage:${RESET}"
-    echo -e "    sudo wififour                ${YELLOW}# Auto-detect interface & run${RESET}"
-    echo -e "    sudo wififour -K             ${YELLOW}# Pixie Dust attack${RESET}"
-    echo -e "    sudo wififour -B             ${YELLOW}# Bruteforce attack${RESET}"
-    echo -e "    sudo wififour -b <BSSID> -K  ${YELLOW}# Direct target attack${RESET}"
+    echo -e "    sudo wifi4                  ${YELLOW}# Auto-detect interface & run${RESET}"
+    echo -e "    sudo wifi4 -K               ${YELLOW}# Pixie Dust attack${RESET}"
+    echo -e "    sudo wifi4 -B               ${YELLOW}# Bruteforce attack${RESET}"
+    echo -e "    sudo wifi4 --pbc            ${YELLOW}# Push Button Connect${RESET}"
+    echo -e "    sudo wifi4 -b <BSSID> -K    ${YELLOW}# Direct target attack${RESET}"
     echo ""
     echo -e "  ${CYAN}Direct usage:${RESET}"
     echo -e "    python3 ${TOOL_DIR}/oneshot.py -i wlan0 -k -K"
