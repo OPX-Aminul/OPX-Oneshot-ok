@@ -63,15 +63,22 @@ install_packages() {
             ;;
         alpine)
             info "Installing packages via apk (--no-cache)..."
+            # Enable community repo for hostapd/dnsmasq if not already enabled
+            if ! grep -q 'community' /etc/apk/repositories 2>/dev/null; then
+                info "Enabling Alpine community repository..."
+                sed -i '/v[0-9].*main$/s/main/community/' /etc/apk/repositories 2>/dev/null || \
+                echo "http://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories 2>/dev/null || true
+            fi
+            apk update --no-cache 2>/dev/null || true
             apk add --no-cache \
                 python3 py3-pip python3-dev \
                 git iw wireless-tools wpa_supplicant iproute2 \
-                hostapd dnsmasq iptables wireless-tools 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             apk add --no-cache \
                 python3 py3-pip \
                 git iw wpa_supplicant iproute2 \
                 hostapd dnsmasq iptables 2>/dev/null || \
-            warn "Some Alpine packages could not be installed"
+            warn "Some Alpine packages could not be installed — hostapd/dnsmasq may need community repo"
             ;;
         arch|manjaro|endeavouros)
             info "Installing packages via pacman..."
