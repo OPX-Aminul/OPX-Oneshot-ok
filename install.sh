@@ -410,12 +410,15 @@ SELECTED=$(printf '%s' "$SELECTED" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:s
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
-# ── Filter out -u from args before passing to oneshot.py ──
+# ── Build args to forward to oneshot.py ──
+# Only forward option flags (starting with '-'). Drop positional tokens such as
+# a stray interface name, because the interface is already passed via -i.
 CLEAN_ARGS=""
 for arg in "$@"; do
     case "$arg" in
         -u|--update) continue ;;
-        *) CLEAN_ARGS="${CLEAN_ARGS} ${arg}" ;;
+        -*)
+            CLEAN_ARGS="${CLEAN_ARGS} ${arg}" ;;
     esac
 done
 
