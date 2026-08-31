@@ -781,6 +781,61 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
         return False
 
 
+def setup_captive_portal_firewall(ap_interface: str):
+    """Block ALL outbound traffic from AP clients EXCEPT DNS/HTTP to our portal.
+
+    This forces captive portal detection to work correctly:
+    - Blocks Private DNS (port 853) so phones MUST use our dnsmasq
+    - Blocks all internet traffic so phones stay in captive portal mode
+    - Only allows DHCP, DNS (to us), and HTTP (to us)
+    """
+    RealtimeLogger.step("Setting up captive portal firewall (blocking outbound)...")
+    try:
+        # Flush existing rules
+        subprocess.run(["iptables", "-F"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-t", "nat", "-F"], capture_output=True, timeout=5)
+
+        # Allow DHCP
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "67:68", "-j", "ACCEPT"], capture_output=True, timeout=5)
+
+        # Allow DNS (UDP + TCP) to our AP — forces all DNS through our dnsmasq
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
+
+        # Allow HTTP to our captive portal server (port 80)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
+
+        # Block Private DNS (port 853) — forces phones to use our dnsmasq
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "DROP"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "DROP"], capture_output=True, timeout=5)
+
+        # Block HTTPS to external servers (prevents DoH bypass)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "DROP"], capture_output=True, timeout=5)
+
+        # Block ALL forwarding (internet)
+        subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "FORWARD", "-o", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
+
+        # Block all other INPUT from AP (except what we allowed above)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
+
+        RealtimeLogger.ok("Captive portal firewall active — Private DNS blocked, all traffic forced through dnsmasq")
+        return True
+    except Exception as e:
+        RealtimeLogger.warn(f"Firewall setup failed: {e}")
+        return False
+
+
+def cleanup_captive_portal_firewall():
+    """Remove captive portal firewall rules."""
+    try:
+        subprocess.run(["iptables", "-F"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-t", "nat", "-F"], capture_output=True, timeout=5)
+        RealtimeLogger.ok("Captive portal firewall cleaned up")
+    except Exception:
+        pass
+
+
 def cleanup_internet_forwarding():
     """Remove iptables rules and disable forwarding."""
     RealtimeLogger.step("Cleaning up internet forwarding...")
@@ -960,6 +1015,11 @@ class APManager:
                         RealtimeLogger.ok("Internet blocked — will grant after form submission")
                     except Exception as e:
                         RealtimeLogger.warn(f"Failed to block internet: {e}")
+        else:
+            # Internet OFF: set up captive portal firewall
+            # This blocks Private DNS (port 853) and DoH (port 443)
+            # forcing ALL DNS through our dnsmasq
+            setup_captive_portal_firewall(self.interface)
 
         # Captive portal (if not DNS-only)
         if not dns_only and portal_html:
@@ -1063,8 +1123,9 @@ class APManager:
         subprocess.run(["killall", "hostapd"], capture_output=True, timeout=3)
         subprocess.run(["killall", "dnsmasq"], capture_output=True, timeout=3)
 
-        # Cleanup internet forwarding
+        # Cleanup internet forwarding and captive portal firewall
         cleanup_internet_forwarding()
+        cleanup_captive_portal_firewall()
 
         # Cleanup temp files
         for f in [HOSTAPD_CONF, DNSMASQ_CONF]:
