@@ -178,11 +178,101 @@ create_wifi4() {
 # ═══════════════════════════════════════════════════════════════
 #  wifi4 — OneShot WPS Attack Tool Launcher
 #  Auto-detects WiFi interfaces, prompts user, runs with -k
+#  Use -u / --update to update from GitHub
 # ═══════════════════════════════════════════════════════════════
 
 TOOL_DIR="/opt/oneshot"
 TOOL="$TOOL_DIR/oneshot.py"
+VULN_FILE="$TOOL_DIR/vulnwsc.txt"
+REPO_RAW="https://raw.githubusercontent.com/OPX-Aminul/OPX-Oneshot-ok/main"
 
+# ── Handle -u / --update ─────────────────────────────────────
+UPDATE_MODE=0
+for arg in "$@"; do
+    if [ "$arg" = "-u" ] || [ "$arg" = "--update" ]; then
+        UPDATE_MODE=1
+        break
+    fi
+done
+
+if [ "$UPDATE_MODE" -eq 1 ]; then
+    echo ""
+    echo -e "\033[1;36m╔══════════════════════════════════════════════════╗\033[0m"
+    echo -e "\033[1;36m║\033[0m  \033[1;97mOneShot Updater\033[0m                              \033[1;36m║\033[0m"
+    echo -e "\033[1;36m╚══════════════════════════════════════════════════╝\033[0m"
+    echo ""
+
+    # Check for curl or wget
+    DOWNLOADER=""
+    if command -v curl &>/dev/null; then
+        DOWNLOADER="curl"
+    elif command -v wget &>/dev/null; then
+        DOWNLOADER="wget"
+    else
+        echo -e "\033[1;31m[!] Neither curl nor wget found. Install one to use --update.\033[0m"
+        exit 1
+    fi
+
+    echo -e "\033[1;32m[*] Updating from GitHub...\033[0m"
+    echo -e "\033[90m    Repo: OPX-Aminul/OPX-Oneshot-ok\033[0m"
+    echo ""
+
+    # Backup current version
+    if [ -f "$TOOL" ]; then
+        cp "$TOOL" "${TOOL}.bak"
+        echo -e "\033[90m    [~] Backed up current version\033[0m"
+    fi
+
+    # Download oneshot.py
+    echo -ne "\033[1;33m    [↓] Downloading oneshot.py...\033[0m"
+    if [ "$DOWNLOADER" = "curl" ]; then
+        curl -sL -o "$TOOL" "${REPO_RAW}/oneshot.py"
+    else
+        wget -q -O "$TOOL" "${REPO_RAW}/oneshot.py"
+    fi
+    if [ -f "$TOOL" ] && [ -s "$TOOL" ]; then
+        chmod +x "$TOOL"
+        echo -e "\033[1;32m OK\033[0m"
+    else
+        echo -e "\033[1;31m FAILED\033[0m"
+        echo -e "\033[1;31m[!] Failed to download oneshot.py. Check your internet connection.\033[0m"
+        # Restore backup
+        if [ -f "${TOOL}.bak" ]; then
+            mv "${TOOL}.bak" "$TOOL"
+            echo -e "\033[90m    [~] Restored previous version\033[0m"
+        fi
+        exit 1
+    fi
+
+    # Download vulnwsc.txt
+    echo -ne "\033[1;33m    [↓] Downloading vulnwsc.txt...\033[0m"
+    if [ "$DOWNLOADER" = "curl" ]; then
+        curl -sL -o "$VULN_FILE" "${REPO_RAW}/vulnwsc.txt"
+    else
+        wget -q -O "$VULN_FILE" "${REPO_RAW}/vulnwsc.txt"
+    fi
+    if [ -f "$VULN_FILE" ] && [ -s "$VULN_FILE" ]; then
+        ENTRIES=$(wc -l < "$VULN_FILE")
+        echo -e "\033[1;32m OK\033[0m \033[90m(${ENTRIES} entries)\033[0m"
+    else
+        echo -e "\033[1;33m SKIP\033[0m \033[90m(using existing database)\033[0m"
+    fi
+
+    # Remove backup on success
+    rm -f "${TOOL}.bak"
+
+    # Show installed version
+    echo ""
+    echo -e "\033[1;32m[✓] Update complete!\033[0m"
+    echo -e "\033[90m    Installed: $TOOL\033[0m"
+    echo -e "\033[90m    Database:  $VULN_FILE\033[0m"
+    echo ""
+    echo -e "\033[90m    Run \033[0msudo wifi4\033[90m to start the tool\033[0m"
+    echo ""
+    exit 0
+fi
+
+# ── Normal mode: check requirements ──
 if [ ! -f "$TOOL" ]; then
     echo -e "\033[1;31m[!] oneshot.py not found at $TOOL\033[0m"
     echo "    Re-run: sudo bash install.sh"
@@ -268,8 +358,16 @@ done
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
+# ── Filter out -u from args before passing to oneshot.py ──
+CLEAN_ARGS=()
+for arg in "$@"; do
+    if [ "$arg" != "-u" ] && [ "$arg" != "--update" ]; then
+        CLEAN_ARGS+=("$arg")
+    fi
+done
+
 # ── Run OneShot with -k (kill) and -K (Pixie Dust) by default ─
-exec python3 "$TOOL" -i "$SELECTED" -k -K "$@"
+exec python3 "$TOOL" -i "$SELECTED" -k -K "${CLEAN_ARGS[@]}"
 WIFI4_EOF
 
     chmod +x "${INSTALL_DIR}/${COMMAND_NAME}"
@@ -300,6 +398,7 @@ main() {
     echo ""
     echo -e "  ${CYAN}Usage:${RESET}"
     echo -e "    sudo wifi4                  ${YELLOW}# Auto-detect interface & run${RESET}"
+    echo -e "    sudo wifi4 -u               ${YELLOW}# Update tool from GitHub${RESET}"
     echo -e "    sudo wifi4 -K               ${YELLOW}# Pixie Dust attack${RESET}"
     echo -e "    sudo wifi4 -B               ${YELLOW}# Bruteforce attack${RESET}"
     echo -e "    sudo wifi4 --pbc            ${YELLOW}# Push Button Connect${RESET}"

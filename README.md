@@ -79,6 +79,9 @@ sudo wifi4
 ### Attack Modes
 
 ```bash
+# Update tool from GitHub
+sudo wifi4 -u
+
 # Pixie Dust attack (offline PIN recovery)
 sudo wifi4 -K
 
@@ -99,6 +102,14 @@ sudo wifi4 -K -F
 
 # Show pixiewps command
 sudo wifi4 -K -X
+```
+
+### wifi4 Wrapper Options
+
+The `wifi4` command handles these flags itself (before launching oneshot.py):
+
+```
+  -u, --update    Update oneshot.py and vulnwsc.txt from GitHub
 ```
 
 ### All Options
