@@ -241,66 +241,89 @@ done
 if [ "$UPDATE_MODE" -eq 1 ]; then
     echo ""
     echo -e "\033[1;36m╔══════════════════════════════════════════════════╗\033[0m"
-    echo -e "\033[1;36m║\033[0m  \033[1;97mOneShot Updater\033[0m                              \033[1;36m║\033[0m"
+    echo -e "\033[1;36m║\033[0m  \033[1;97mWiFi4 Full Updater\033[0m                            \033[1;36m║\033[0m"
     echo -e "\033[1;36m╚══════════════════════════════════════════════════╝\033[0m"
     echo ""
 
-    DOWNLOADER=""
-    if command -v curl &>/dev/null; then
-        DOWNLOADER="curl"
-    elif command -v wget &>/dev/null; then
-        DOWNLOADER="wget"
-    else
-        echo -e "\033[1;31m[!] Neither curl nor wget found. Install one to use --update.\033[0m"
+    if ! command -v git &>/dev/null; then
+        echo -e "\033[1;31m[!] git not found. Install git first.\033[0m"
         exit 1
     fi
 
-    echo -e "\033[1;32m[*] Updating from GitHub...\033[0m"
+    echo -e "\033[1;32m[*] Cloning latest version from GitHub...\033[0m"
     echo -e "\033[90m    Repo: OPX-Aminul/OPX-Oneshot-ok\033[0m"
     echo ""
 
-    if [ -f "$TOOL" ]; then
-        cp "$TOOL" "${TOOL}.bak"
-        echo -e "\033[90m    [~] Backed up current version\033[0m"
-    fi
-
-    echo -ne "\033[1;33m    [↓] Downloading oneshot.py...\033[0m"
-    if [ "$DOWNLOADER" = "curl" ]; then
-        curl -sL -o "$TOOL" "${REPO_RAW}/oneshot.py"
-    else
-        wget -q -O "$TOOL" "${REPO_RAW}/oneshot.py"
-    fi
-    if [ -f "$TOOL" ] && [ -s "$TOOL" ]; then
-        chmod +x "$TOOL"
-        echo -e "\033[1;32m OK\033[0m"
-    else
-        echo -e "\033[1;31m FAILED\033[0m"
-        echo -e "\033[1;31m[!] Failed to download oneshot.py. Check your internet connection.\033[0m"
-        if [ -f "${TOOL}.bak" ]; then
-            mv "${TOOL}.bak" "$TOOL"
-            echo -e "\033[90m    [~] Restored previous version\033[0m"
-        fi
+    CLONE_DIR="$TMP_DIR/wifi4_update"
+    git clone --depth 1 https://github.com/OPX-Aminul/OPX-Oneshot-ok.git "$CLONE_DIR" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "\033[1;31m[!] Failed to clone repository. Check your internet connection.\033[0m"
         exit 1
     fi
 
-    echo -ne "\033[1;33m    [↓] Downloading vulnwsc.txt...\033[0m"
-    if [ "$DOWNLOADER" = "curl" ]; then
-        curl -sL -o "$VULN_FILE" "${REPO_RAW}/vulnwsc.txt"
+    echo -e "\033[90m    [~] Downloaded latest files\033[0m"
+    echo ""
+
+    # ── Update oneshot.py ──
+    echo -ne "\033[1;33m    [↓] Updating oneshot.py...\033[0m"
+    if [ -f "$CLONE_DIR/oneshot.py" ]; then
+        cp "$CLONE_DIR/oneshot.py" "$TOOL"
+        chmod +x "$TOOL"
+        echo -e "\033[1;32m OK\033[0m"
     else
-        wget -q -O "$VULN_FILE" "${REPO_RAW}/vulnwsc.txt"
+        echo -e "\033[1;33m SKIP\033[0m"
     fi
-    if [ -f "$VULN_FILE" ] && [ -s "$VULN_FILE" ]; then
+
+    # ── Update vulnwsc.txt ──
+    echo -ne "\033[1;33m    [↓] Updating vulnwsc.txt...\033[0m"
+    if [ -f "$CLONE_DIR/vulnwsc.txt" ]; then
+        cp "$CLONE_DIR/vulnwsc.txt" "$VULN_FILE"
         ENTRIES=$(wc -l < "$VULN_FILE")
         echo -e "\033[1;32m OK\033[0m \033[90m(${ENTRIES} entries)\033[0m"
     else
-        echo -e "\033[1;33m SKIP\033[0m \033[90m(using existing database)\033[0m"
+        echo -e "\033[1;33m SKIP\033[0m"
     fi
 
-    rm -f "${TOOL}.bak"
+    # ── Update ap_mode.py ──
+    echo -ne "\033[1;33m    [↓] Updating ap_mode.py...\033[0m"
+    if [ -f "$CLONE_DIR/ap_mode.py" ]; then
+        cp "$CLONE_DIR/ap_mode.py" "$TOOL_DIR/ap_mode.py"
+        chmod +x "$TOOL_DIR/ap_mode.py"
+        echo -e "\033[1;32m OK\033[0m"
+    else
+        echo -e "\033[1;33m SKIP\033[0m"
+    fi
+
+    # ── Update captive_portal templates + catalog ──
+    echo -ne "\033[1;33m    [↓] Updating captive_portal/ templates...\033[0m"
+    if [ -d "$CLONE_DIR/captive_portal" ]; then
+        rm -rf "$TOOL_DIR/captive_portal"
+        cp -r "$CLONE_DIR/captive_portal" "$TOOL_DIR/captive_portal"
+        CATALOG_COUNT=$(find "$TOOL_DIR/captive_portal/catalog" -name '*.html' 2>/dev/null | wc -l)
+        TEMPLATE_COUNT=$(find "$TOOL_DIR/captive_portal/templates" -name '*.html' 2>/dev/null | wc -l)
+        echo -e "\033[1;32m OK\033[0m \033[90m(${CATALOG_COUNT} catalog + ${TEMPLATE_COUNT} templates)\033[0m"
+    else
+        echo -e "\033[1;33m SKIP\033[0m"
+    fi
+
+    # ── Update wifi4 launcher itself ──
+    echo -ne "\033[1;33m    [↓] Updating wifi4 launcher...\033[0m"
+    if [ -f "$CLONE_DIR/install.sh" ]; then
+        # Re-run install.sh silently to update the wifi4 command
+        bash "$CLONE_DIR/install.sh" 2>/dev/null
+        echo -e "\033[1;32m OK\033[0m"
+    else
+        echo -e "\033[1;33m SKIP\033[0m"
+    fi
+
+    # ── Summary ──
     echo ""
-    echo -e "\033[1;32m[✓] Update complete!\033[0m"
-    echo -e "\033[90m    Installed: $TOOL\033[0m"
-    echo -e "\033[90m    Database:  $VULN_FILE\033[0m"
+    echo -e "\033[1;32m[✓] Full update complete!\033[0m"
+    echo -e "\033[90m    oneshot.py       — WPS attack tool\033[0m"
+    echo -e "\033[90m    ap_mode.py       — AP Mode / Captive Portal\033[0m"
+    echo -e "\033[90m    vulnwsc.txt      — Vulnerable devices DB\033[0m"
+    echo -e "\033[90m    captive_portal/  — All templates & catalog\033[0m"
+    echo -e "\033[90m    wifi4            — Launcher script\033[0m"
     echo ""
     echo -e "\033[90m    Run \033[0msudo wifi4\033[90m to start the tool\033[0m"
     echo ""
