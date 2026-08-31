@@ -574,16 +574,22 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
 
     # ── Response helpers ─────────────────────────────────────
     def _redirect_to_portal(self):
-        """302 redirect to our captive portal — triggers popup on all OS."""
+        """Serve portal directly + redirect — triggers popup on all OS including MIUI.
+
+        MIUI/Xiaomi captive portal browser does NOT follow 302 redirects.
+        So we serve the portal HTML directly in the response body AND
+        also send a Location header as fallback for other OS.
+        This ensures the popup shows content on every device.
+        """
+        # First try 302 redirect (works on stock Android, iOS, Windows)
         self.send_response(302)
         self.send_header("Location", f"http://{AP_IP}/")
-        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
-        self.wfile.write(
-            b"<HTML><HEAD><TITLE>302 Found</TITLE></HEAD>"
-            b"<BODY><A HREF=\"http://" + AP_IP.encode() + b"/\">Portal</A></BODY></HTML>"
-        )
+        # Also include the full portal HTML in the body
+        # MIUI browser renders the body directly without following redirect
+        self.wfile.write(self.portal_html.encode("utf-8"))
 
     def _serve_portal(self):
         """Serve the captive portal login page."""
