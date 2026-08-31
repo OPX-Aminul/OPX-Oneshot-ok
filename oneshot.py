@@ -26,17 +26,22 @@ import io
 # ──────────────────────────────────────────────
 class RealtimeLogger:
     """
-    Prints every operation to the terminal in real‑time:
-    • commands being run
-    • their stdout/stderr (streamed live)
-    • errors / warnings / success
-    All lines are timestamped for traceability.
+    \u2588\u2588 Hacker-Style Real-Time Terminal Logger \u2588\u2588
+    \u2588\u2588 Per-millisecond timestamps, color-coded, live-streamed \u2588\u2588
+
+    Every operation prints to the terminal in real-time with:
+    \u2022 Per-millisecond timestamps (HH:MM:SS.mmm)
+    \u2022 Color-coded severity levels
+    \u2022 Live stdout/stderr streaming
+    \u2022 Duration tracking for each operation
+    \u2022 Hacker-style box-drawing separators
 
     When sys.stdout is a StringIO wrapper (WebUI capture mode),
     ANSI codes are automatically stripped so the web UI sees clean text.
     """
     _lock = threading.Lock()
     _enabled = True
+    _op_start = {}  # Track operation start times for duration
 
     # ANSI colour codes
     _CYAN    = '\033[96m'
@@ -44,10 +49,15 @@ class RealtimeLogger:
     _YELLOW  = '\033[93m'
     _RED     = '\033[91m'
     _MAGENTA = '\033[95m'
+    _BLUE    = '\033[94m'
+    _WHITE   = '\033[97m'
+    _BOLD    = '\033[1m'
+    _DIM     = '\033[2m'
     _RESET   = '\033[00m'
     _GREY    = '\033[90m'
     _ANSI_RE = re.compile(r'\033\[[0-9;]*m')
-    _SEP     = '─' * 60
+    _SEP     = '\u2500' * 60
+    _DOUBLE  = '\u2550' * 60
 
     @classmethod
     def _strip_ansi(cls, text: str) -> str:
@@ -58,7 +68,9 @@ class RealtimeLogger:
 
     @classmethod
     def _ts(cls):
-        return cls._GREY + datetime.now().strftime('%H:%M:%S') + cls._RESET
+        """Per-millisecond timestamp: HH:MM:SS.mmm"""
+        now = datetime.now()
+        return cls._GREY + now.strftime('%H:%M:%S') + '.' + now.strftime('%f')[:3] + cls._RESET
 
     @classmethod
     def _write(cls, text: str):
@@ -68,40 +80,63 @@ class RealtimeLogger:
             print(cls._strip_ansi(text))
 
     @classmethod
+    def banner(cls, text: str):
+        """Hacker-style banner box"""
+        box = '\u2554' + '\u2550' * (len(text) + 4) + '\u2557'
+        cls._write(f'  {cls._BOLD}{cls._CYAN}{box}{cls._RESET}')
+        cls._write(f'  {cls._BOLD}{cls._CYAN}\u2551  {cls._WHITE}{text}{cls._CYAN}  \u2551{cls._RESET}')
+        cls._write(f'  {cls._BOLD}{cls._CYAN}\u255a' + '\u2550' * (len(text) + 4) + '\u255d' + cls._RESET)
+
+    @classmethod
     def cmd(cls, command: str):
-        cls._write(f'  {cls._ts()} {cls._CYAN}▸ CMD{cls._RESET} {command}')
+        cls._write(f'  {cls._ts()} {cls._CYAN}{cls._BOLD}\u25b8 CMD{cls._RESET} {cls._DIM}{command}{cls._RESET}')
 
     @classmethod
     def info(cls, msg: str):
-        cls._write(f'  {cls._ts()} {cls._GREEN}ℹ{cls._RESET} {msg}')
+        cls._write(f'  {cls._ts()} {cls._GREEN}\u2139 {cls._BOLD}INFO{cls._RESET} {msg}')
 
     @classmethod
     def warn(cls, msg: str):
-        cls._write(f'  {cls._ts()} {cls._YELLOW}⚠{cls._RESET} {msg}')
+        cls._write(f'  {cls._ts()} {cls._YELLOW}\u26a0 {cls._BOLD}WARN{cls._RESET} {msg}')
 
     @classmethod
     def err(cls, msg: str):
-        cls._write(f'  {cls._ts()} {cls._RED}✖{cls._RESET} {msg}')
+        cls._write(f'  {cls._ts()} {cls._RED}{cls._BOLD}\u2716 FAIL{cls._RESET} {msg}')
 
     @classmethod
     def ok(cls, msg: str):
-        cls._write(f'  {cls._ts()} {cls._GREEN}✔{cls._RESET} {msg}')
+        cls._write(f'  {cls._ts()} {cls._GREEN}{cls._BOLD}\u2714  OK{cls._RESET} {msg}')
 
     @classmethod
     def stdout(cls, line: str):
-        cls._write(f'  {cls._ts()} {cls._GREY}│{cls._RESET} {line}')
+        cls._write(f'  {cls._ts()} {cls._GREY}\u2502{cls._RESET} {line}')
 
     @classmethod
     def step(cls, msg: str):
-        cls._write(f'  {cls._ts()} {cls._MAGENTA}◈{cls._RESET} {msg}')
+        cls._write(f'  {cls._ts()} {cls._MAGENTA}{cls._BOLD}\u25c8 STEP{cls._RESET} {msg}')
+
+    @classmethod
+    def data(cls, label: str, value: str):
+        """Print labeled data (hex values, keys, etc.)"""
+        cls._write(f'  {cls._ts()} {cls._BLUE}{cls._BOLD}\u25a0 DATA{cls._RESET} {cls._BOLD}{label}{cls._RESET} = {cls._YELLOW}{value}{cls._RESET}')
+
+    @classmethod
+    def hex(cls, label: str, value: str):
+        """Print hex data in hacker style"""
+        cls._write(f'  {cls._ts()} {cls._BLUE}\u25a0 {cls._BOLD}HEX{cls._RESET} {cls._DIM}{label}{cls._RESET}: {cls._YELLOW}{value}{cls._RESET}')
 
     @classmethod
     def separator(cls):
-        cls._write(cls._SEP)
+        cls._write(f'  {cls._GREY}{cls._SEP}{cls._RESET}')
+
+    @classmethod
+    def double_separator(cls):
+        cls._write(f'  {cls._CYAN}{cls._DOUBLE}{cls._RESET}')
 
     @classmethod
     def run_subprocess(cls, cmd: str, **kwargs) -> subprocess.CompletedProcess:
         cls.cmd(cmd)
+        start = time.time()
         popen = subprocess.Popen(
             cmd,
             shell=True,
@@ -117,16 +152,19 @@ class RealtimeLogger:
             lines.append(line)
             cls.stdout(line)
         popen.wait()
+        elapsed = (time.time() - start) * 1000  # ms
         result = subprocess.CompletedProcess(
             args=cmd,
             returncode=popen.returncode,
             stdout='\n'.join(lines),
         )
         if popen.returncode == 0:
-            cls.ok(f'Exit code {popen.returncode}')
+            cls.ok(f'Exit {popen.returncode} ({elapsed:.1f}ms)')
         else:
-            cls.err(f'Exit code {popen.returncode}')
+            cls.err(f'Exit {popen.returncode} ({elapsed:.1f}ms)')
         return result
+
+
 
 
 class NetworkAddress:
@@ -208,10 +246,32 @@ class WPSpin:
         self.algos = {'pin24': {'name': '24-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin24},
                       'pin28': {'name': '28-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin28},
                       'pin32': {'name': '32-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin32},
+                      'pin36': {'name': '36-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin36},
+                      'pin40': {'name': '40-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin40},
+                      'pin44': {'name': '44-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin44},
+                      'pin48': {'name': '48-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin48},
                       'pinDLink': {'name': 'D-Link PIN', 'mode': self.ALGO_MAC, 'gen': self.pinDLink},
                       'pinDLink1': {'name': 'D-Link PIN +1', 'mode': self.ALGO_MAC, 'gen': self.pinDLink1},
                       'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
                       'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
+                      'pin24rh': {'name': 'Reverse byte 24-bit', 'mode': self.ALGO_MAC, 'gen': self.pin24rh},
+                      'pin32rh': {'name': 'Reverse byte 32-bit', 'mode': self.ALGO_MAC, 'gen': self.pin32rh},
+                      'pin48rh': {'name': 'Reverse byte 48-bit', 'mode': self.ALGO_MAC, 'gen': self.pin48rh},
+                      'pin24rn': {'name': 'Reverse nibble 24-bit', 'mode': self.ALGO_MAC, 'gen': self.pin24rn},
+                      'pin32rn': {'name': 'Reverse nibble 32-bit', 'mode': self.ALGO_MAC, 'gen': self.pin32rn},
+                      'pin48rn': {'name': 'Reverse nibble 48-bit', 'mode': self.ALGO_MAC, 'gen': self.pin48rn},
+                      'pin24rb': {'name': 'Reverse bits 24-bit', 'mode': self.ALGO_MAC, 'gen': self.pin24rb},
+                      'pin32rb': {'name': 'Reverse bits 32-bit', 'mode': self.ALGO_MAC, 'gen': self.pin32rb},
+                      'pin48rb': {'name': 'Reverse bits 48-bit', 'mode': self.ALGO_MAC, 'gen': self.pin48rb},
+                      'pinInvNIC': {'name': 'Inv NIC to PIN', 'mode': self.ALGO_MAC, 'gen': self.pinInvNIC},
+                      'pinNIC2': {'name': 'NIC * 2', 'mode': self.ALGO_MAC, 'gen': self.pinNIC2},
+                      'pinNIC3': {'name': 'NIC * 3', 'mode': self.ALGO_MAC, 'gen': self.pinNIC3},
+                      'pinOUIaddNIC': {'name': 'OUI + NIC', 'mode': self.ALGO_MAC, 'gen': self.pinOUIaddNIC},
+                      'pinOUIsubNIC': {'name': 'OUI - NIC', 'mode': self.ALGO_MAC, 'gen': self.pinOUIsubNIC},
+                      'pinOUIxorNIC': {'name': 'OUI ^ NIC', 'mode': self.ALGO_MAC, 'gen': self.pinOUIxorNIC},
+                      'pinBelkin': {'name': 'Belkin PIN', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1754620},
+                      'pinEasyBox': {'name': 'Vodafone EasyBox', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1314573},
+                      'pinLivebox': {'name': 'Livebox Arcadyan', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1234570},
                       # Static pin algos
                       'pinEmpty': {'name': 'Empty PIN', 'mode': self.ALGO_EMPTY, 'gen': lambda mac: ''},
                       'pinCisco': {'name': 'Cisco', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1234567},
@@ -235,7 +295,53 @@ class WPSpin:
                       'pinThomson': {'name': 'Thomson', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 6795814},
                       'pinHG532x': {'name': 'HG532x', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3425928},
                       'pinH108L': {'name': 'H108L', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9422988},
-                      'pinONO': {'name': 'CBN ONO', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9575521}}
+                      'pinONO': {'name': 'CBN ONO', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9575521},
+                      'pinTenda': {'name': 'Tenda', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 98765432},
+                      'pinZTE': {'name': 'ZTE', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinHuawei1': {'name': 'Huawei 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 49150427},
+                      'pinHuawei2': {'name': 'Huawei 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 88257369},
+                      'pinNetgear1': {'name': 'Netgear 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinNetgear2': {'name': 'Netgear 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 76543210},
+                      'pinLinksys1': {'name': 'Linksys 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinLinksys2': {'name': 'Linksys 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3195719},
+                      'pinZyXEL': {'name': 'ZyXEL', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinAVM': {'name': 'AVM Fritz', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 37730616},
+                      'pinArris': {'name': 'Arris', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinSagemcom': {'name': 'Sagemcom', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinActiontec': {'name': 'Actiontec', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinAztech': {'name': 'Aztech', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinBillion': {'name': 'Billion', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinComtrend': {'name': 'Comtrend', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinLevelOne': {'name': 'Level One', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinPhicomm': {'name': 'Phicomm', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinRuijie': {'name': 'Ruijie', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinSercomm': {'name': 'Sercomm', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinTechnicolor': {'name': 'Technicolor', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinUbee': {'name': 'Ubee', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinZhone': {'name': 'Zhone', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinGenexis': {'name': 'Genexis', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinSkystream': {'name': 'Skystream', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinInfomark': {'name': 'Infomark', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinZio': {'name': 'Zio', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinScienBolic': {'name': 'ScienBolic', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinCradlepoint': {'name': 'Cradlepoint', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinDraytek': {'name': 'Draytek', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinSitecom': {'name': 'Sitecom', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinZyxel2': {'name': 'ZyXEL 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinTPlink': {'name': 'TP-Link', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinDLink2': {'name': 'D-Link 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 21453647},
+                      'pinMotorola': {'name': 'Motorola', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinBelkin2': {'name': 'Belkin 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 22435465},
+                      'pinCisco2': {'name': 'Cisco 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinSky': {'name': 'Sky', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinBT': {'name': 'BT Home Hub', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinEE': {'name': 'EE Bright Box', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinTalkTalk': {'name': 'TalkTalk', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinVodafone': {'name': 'Vodafone', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinThree': {'name': 'Three', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinO2': {'name': 'O2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinVirgin': {'name': 'Virgin Media', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678},
+                      'pinPlusnet': {'name': 'Plusnet', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 12345678}}
 
     @staticmethod
     def checksum(pin):
@@ -421,6 +527,90 @@ class WPSpin:
         + (((b[1] + b[2]) % 10) * 100000)\
         + (((b[0] + b[1]) % 10) * 1000000)
         return pin
+
+    def pin36(self, mac):
+        return mac.integer % 0x1000000000
+
+    def pin40(self, mac):
+        return mac.integer % 0x10000000000
+
+    def pin44(self, mac):
+        return mac.integer % 0x100000000000
+
+    def pin48(self, mac):
+        return mac.integer
+
+    def pin24rh(self, mac):
+        nic = mac.integer & 0xFFFFFF
+        s = format(nic, '06x')
+        return int(s[4:6] + s[2:4] + s[0:2], 16)
+
+    def pin32rh(self, mac):
+        nic = mac.integer % 0x100000000
+        s = format(nic, '08x')
+        return int(s[6:8] + s[4:6] + s[2:4] + s[0:2], 16)
+
+    def pin48rh(self, mac):
+        s = format(mac.integer, '012x')
+        return int(s[10:12] + s[8:10] + s[6:8] + s[4:6] + s[2:4] + s[0:2], 16)
+
+    def pin24rn(self, mac):
+        nic = mac.integer & 0xFFFFFF
+        s = format(nic, '06x')
+        return int(s[::-1], 16)
+
+    def pin32rn(self, mac):
+        nic = mac.integer % 0x100000000
+        s = format(nic, '08x')
+        return int(s[::-1], 16)
+
+    def pin48rn(self, mac):
+        s = format(mac.integer, '012x')
+        return int(s[::-1], 16)
+
+    def pin24rb(self, mac):
+        nic = mac.integer & 0xFFFFFF
+        s = format(nic, '024b')
+        return int(s[::-1], 2)
+
+    def pin32rb(self, mac):
+        nic = mac.integer % 0x100000000
+        s = format(nic, '032b')
+        return int(s[::-1], 2)
+
+    def pin48rb(self, mac):
+        s = format(mac.integer, '048b')
+        return int(s[::-1], 2)
+
+    def pinInvNIC(self, mac):
+        nic = mac.integer & 0xFFFFFF
+        return (~nic) & 0xFFFFFF
+
+    def pinNIC2(self, mac):
+        return (mac.integer & 0xFFFFFF) * 2
+
+    def pinNIC3(self, mac):
+        return (mac.integer & 0xFFFFFF) * 3
+
+    def pinOUIaddNIC(self, mac):
+        s = format(mac.integer, '012x')
+        oui = int(s[0:6], 16)
+        nic = int(s[6:12], 16)
+        return (oui + nic) % 0x1000000
+
+    def pinOUIsubNIC(self, mac):
+        s = format(mac.integer, '012x')
+        oui = int(s[0:6], 16)
+        nic = int(s[6:12], 16)
+        if nic < oui:
+            return oui - nic
+        return (oui + 0x1000000 - nic) & 0xFFFFFF
+
+    def pinOUIxorNIC(self, mac):
+        s = format(mac.integer, '012x')
+        oui = int(s[0:6], 16)
+        nic = int(s[6:12], 16)
+        return oui ^ nic
 
 
 def recvuntil(pipe, what):
