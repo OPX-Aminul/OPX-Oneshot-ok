@@ -268,8 +268,8 @@ done
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
-# ── Run OneShot with -k (kill interfering processes) ──────────
-exec python3 "$TOOL" -i "$SELECTED" -k "$@"
+# ── Run OneShot with -k (kill) and -K (Pixie Dust) by default ─
+exec python3 "$TOOL" -i "$SELECTED" -k -K "$@"
 WIFI4_EOF
 
     chmod +x "${INSTALL_DIR}/${COMMAND_NAME}"
