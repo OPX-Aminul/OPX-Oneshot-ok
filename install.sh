@@ -51,30 +51,30 @@ install_packages() {
     case "$DISTRO_ID" in
         debian|ubuntu|linuxmint|pop|kali|parrot)
             info "Installing packages via apt..."
-            apt-get update -qq
+            apt-get update -qq || warn "apt-get update failed, continuing..."
             apt-get install -y -qq python3 python3-pip python3-dev \
                 git iw wpa_supplicant pixiewps iproute2 wcwidth 2>/dev/null || \
             apt-get install -y python3 python3-pip python3-dev \
-                git iw wpa_supplicant iproute2 2>/dev/null
+                git iw wpa_supplicant iproute2 2>/dev/null || \
+            warn "Some packages could not be installed"
             ;;
         alpine)
             info "Installing packages via apk (--no-cache)..."
-            # Alpine: use --no-cache to avoid stale index
-            # python3-dev for building, wireless-tools for iwconfig fallback
             apk add --no-cache \
                 python3 py3-pip python3-dev \
                 git iw wireless-tools wpa_supplicant iproute2 2>/dev/null || \
             apk add --no-cache \
                 python3 py3-pip \
                 git iw wpa_supplicant iproute2 2>/dev/null || \
-            error "Failed to install Alpine packages. Try manually: apk add python3 py3-pip git iw wpa_supplicant iproute2"
+            warn "Some Alpine packages could not be installed"
             ;;
         arch|manjaro|endeavouros)
             info "Installing packages via pacman..."
             pacman -Sy --noconfirm python python-pip python-wcwidth \
                 git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
             pacman -Sy --noconfirm python python-pip \
-                git iw wpa_supplicant iproute2
+                git iw wpa_supplicant iproute2 2>/dev/null || \
+            warn "Some packages could not be installed"
             ;;
         fedora|rhel|centos|rocky|almalinux)
             info "Installing packages via dnf/yum..."
@@ -82,34 +82,37 @@ install_packages() {
                 git iw wpa_supplicant pixiewps iproute 2>/dev/null || \
             yum install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant iproute 2>/dev/null || \
-            error "Failed to install packages. Install manually: python3, iw, wpa_supplicant, iproute2"
+            warn "Some packages could not be installed"
             ;;
         opensuse*|sles)
             info "Installing packages via zypper..."
             zypper install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
             zypper install -y python3 python3-pip python3-devel \
-                git iw wpa_supplicant iproute2
+                git iw wpa_supplicant iproute2 2>/dev/null || \
+            warn "Some packages could not be installed"
             ;;
         void)
             info "Installing packages via xbps..."
             xbps-install -SuY python3 python3-pip \
-                git iw wpa_supplicant pixiewps iproute2
+                git iw wpa_supplicant pixiewps iproute2 || \
+            warn "Some packages could not be installed"
             ;;
         *)
             warn "Unknown distro (${DISTRO_ID}). Trying common package managers..."
             if command -v apt-get &>/dev/null; then
-                apt-get update -qq && apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2
+                apt-get update -qq || true
+                apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
             elif command -v apk &>/dev/null; then
-                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2
+                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2 || true
             elif command -v pacman &>/dev/null; then
-                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2
+                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2 || true
             elif command -v dnf &>/dev/null; then
-                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2
+                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
             elif command -v zypper &>/dev/null; then
-                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2
+                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
             else
-                error "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2"
+                warn "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2"
             fi
             ;;
     esac
