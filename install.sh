@@ -286,10 +286,15 @@ fi
 # ── Auto-detect WiFi interfaces (POSIX-compatible) ───────────
 echo -e "\033[1;36m[*] Scanning for WiFi interfaces...\033[0m"
 
+if ! command -v iw &>/dev/null; then
+    echo -e "\033[1;33m[-] 'iw' not found — wireless interface detection is limited.\033[0m"
+    echo -e "\033[90m    Install it (e.g. apt/pacman/dnf install iw) for best results.\033[0m"
+fi
+
 IFACES_FILE="$TMP_DIR/ifaces.txt"
 > "$IFACES_FILE"
 
-# Method 1: iw dev (most reliable)
+# Method 1: iw dev (most reliable) — lists real 802.11 wireless interfaces
 iw dev 2>/dev/null | awk '/Interface/{print $2}' >> "$IFACES_FILE"
 
 # Method 2: /sys/class/net — check every interface for wireless capability
@@ -302,19 +307,33 @@ for iface_path in /sys/class/net/*; do
     fi
 done 2>/dev/null
 
-# Method 3: ip link — broad search for any non-loopback interface
-if [ ! -s "$IFACES_FILE" ]; then
-    ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -v '^lo$' | grep -v '^$' >> "$IFACES_FILE"
-fi
+# Method 3: ip link — broad search for ANY non-loopback interface.
+# This runs UNCONDITIONALLY so wlan0 (and friends) are never dropped just
+# because an earlier method already found dummy0/eth0.
+ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -v '^lo$' | grep -v '^$' >> "$IFACES_FILE"
 
-# Method 4: iwconfig fallback
-if [ ! -s "$IFACES_FILE" ] && command -v iwconfig &>/dev/null; then
+# Method 4: iwconfig fallback (only if iwconfig exists)
+if command -v iwconfig &>/dev/null; then
     iwconfig 2>/dev/null | awk '{print $1}' | grep -v "^lo$" | grep -v "^eth" >> "$IFACES_FILE"
 fi
 
-# Method 5: last resort — just try wlan0 directly
-if [ ! -s "$IFACES_FILE" ] && [ -d /sys/class/net/wlan0 ]; then
+# Method 5: last resort — always include wlan0 if it exists
+if [ -d /sys/class/net/wlan0 ]; then
     echo "wlan0" >> "$IFACES_FILE"
+fi
+
+# Prefer wireless interfaces; keep others as fallback but ensure the user
+# can always pick the real WiFi NIC even when wired/dummy ifaces crowd the list.
+PREFER_WIRELESS_FILE="$TMP_DIR/ifaces_wireless.txt"
+> "$PREFER_WIRELESS_FILE"
+for iface in $(sort -u "$IFACES_FILE"); do
+    [ -z "$iface" ] && continue
+    if [ -d "/sys/class/net/$iface/wireless" ] || [ -d "/sys/class/net/$iface/phy80211" ]; then
+        echo "$iface" >> "$PREFER_WIRELESS_FILE"
+    fi
+done
+if [ -s "$PREFER_WIRELESS_FILE" ]; then
+    cp "$PREFER_WIRELESS_FILE" "$IFACES_FILE"
 fi
 
 # Deduplicate
