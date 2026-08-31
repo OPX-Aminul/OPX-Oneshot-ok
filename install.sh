@@ -283,7 +283,20 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# ── Auto-detect WiFi interfaces (POSIX-compatible, no process substitution) ─
+# ── Auto-load WiFi USB drivers ───────────────────────────────
+# Common Realtek USB WiFi adapters need kernel modules loaded
+DRIVER_LOADED=0
+for mod in 88XXau rtl8812au rtl8811au 8812au 8188eu rtl8188eu 8812bu rtl8822bu 8821cu rtl8821cu mt7612u mt7610u; do
+    if modprobe "$mod" 2>/dev/null; then
+        DRIVER_LOADED=1
+        break
+    fi
+done
+if [ "$DRIVER_LOADED" -eq 1 ]; then
+    sleep 1  # Give the kernel time to register the interface
+fi
+
+# ── Auto-detect WiFi interfaces (POSIX-compatible) ───────────
 echo -e "\033[1;36m[*] Scanning for WiFi interfaces...\033[0m"
 
 IFACES_FILE="$TMP_DIR/ifaces.txt"
@@ -300,11 +313,30 @@ if [ ! -s "$IFACES_FILE" ] && command -v iwconfig &>/dev/null; then
     iwconfig 2>/dev/null | awk '{print $1}' | grep -v "lo\|eth" >> "$IFACES_FILE"
 fi
 
+# Method 4: /sys/class/net + wireless indicator
+if [ ! -s "$IFACES_FILE" ]; then
+    for iface_dir in /sys/class/net/*/wireless; do
+        if [ -d "$iface_dir" ]; then
+            iface=$(echo "$iface_dir" | awk -F'/sys/class/net/' '{print $2}' | awk -F'/' '{print $1}')
+            echo "$iface" >> "$IFACES_FILE"
+        fi
+    done 2>/dev/null
+fi
+
+# Method 5: scan /sys/bus/usb/drivers for known Realtek adapters
+if [ ! -s "$IFACES_FILE" ]; then
+    for iface in $(ls /sys/class/net/ 2>/dev/null); do
+        if [ -d "/sys/class/net/$iface/wireless" ] || [ -d "/sys/class/net/$iface/phy80211" ]; then
+            echo "$iface" >> "$IFACES_FILE"
+        fi
+    done 2>/dev/null
+fi
+
 # Deduplicate and filter
 DEDUP_FILE="$TMP_DIR/ifaces_dedup.txt"
 sort -u "$IFACES_FILE" | grep -v '^lo$' | grep -v '^$' > "$DEDUP_FILE"
 
-# Read into array (POSIX-compatible)
+# Read into variable (POSIX-compatible)
 IFACES=""
 if [ -s "$DEDUP_FILE" ]; then
     while IFS= read -r line; do
@@ -312,18 +344,24 @@ if [ -s "$DEDUP_FILE" ]; then
     done < "$DEDUP_FILE"
 fi
 
-# Convert to array
+# Convert to list
 set -- $IFACES
 IFACE_COUNT=0
-IFACE_LIST=""
 for iface in "$@"; do
     IFACE_COUNT=$((IFACE_COUNT + 1))
-    IFACE_LIST="${IFACE_LIST}${IFACE_COUNT}) ${iface}  "
 done
 
 if [ "$IFACE_COUNT" -eq 0 ]; then
     echo -e "\033[1;31m[!] No WiFi interfaces found.\033[0m"
-    echo "    Make sure a WiFi adapter is connected."
+    echo ""
+    echo -e "\033[90m    USB WiFi adapter detected via lsusb:$(lsusb 2>/dev/null | grep -i -E 'realtek|ralink|mediatek|wireless|wifi')\033[0m"
+    echo ""
+    echo -e "\033[1;33m    Possible fixes:\033[0m"
+    echo -e "    \033[90m1. Load driver: sudo modprobe 88XXau\033[0m"
+    echo -e "    \033[90m2. Install driver: sudo apk add linux-firmware\033[0m"
+    echo -e "    \033[90m3. Bring up interface: sudo ip link set wlan0 up\033[0m"
+    echo -e "    \033[90m4. Check: ip link show\033[0m"
+    echo ""
     exit 1
 fi
 
