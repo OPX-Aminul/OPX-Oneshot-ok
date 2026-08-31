@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Critical: viewport for mobile — prevents zoom on input focus (iOS) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f0c29">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sign in to Wi-Fi network</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding: 20px;
+            /* Prevent overscroll bounce on iOS */
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        html {
+            height: -webkit-fill-available;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 36px 28px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            /* Safe area insets for notched phones */
+            padding-left: max(28px, env(safe-area-inset-left));
+            padding-right: max(28px, env(safe-area-inset-right));
+            padding-top: max(36px, env(safe-area-inset-top));
+            padding-bottom: max(36px, env(safe-area-inset-bottom));
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo svg {
+            width: 56px;
+            height: 56px;
+            fill: #7c6cf0;
+            filter: drop-shadow(0 4px 12px rgba(124, 108, 240, 0.4));
+        }
+        .logo h2 {
+            font-size: 1.35rem;
+            margin-top: 14px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .logo p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px; /* Prevents iOS zoom on focus */
+            line-height: 1.4;
+            outline: none;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .input-group input:focus {
+            border-color: #7c6cf0;
+            box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.25);
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+        .btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #7c6cf0, #5b4ed4);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.25s ease;
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(124, 108, 240, 0.35);
+        }
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 4px 12px rgba(124, 108, 240, 0.2);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.2px;
+        }
+        /* Prevent text selection on non-input elements */
+        .logo, .footer, .btn { user-select: none; -webkit-user-select: none; }
+        /* Smooth scrolling */
+        @media (prefers-reduced-motion: no-preference) {
+            html { scroll-behavior: smooth; }
+        }
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body { background: #0a0818; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <h2>Sign in to network</h2>
+            <p>Enter your credentials to access the Wi-Fi network</p>
+        </div>
+        <form method="POST" action="/login" autocomplete="off">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username"
+                       placeholder="Enter username"
+                       required autocomplete="off" autocorrect="off"
+                       autocapitalize="none" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password"
+                       placeholder="Enter password"
+                       required autocomplete="off">
+            </div>
+            <button type="submit" class="btn">Connect to Network</button>
+        </form>
+        <div class="footer">
+            Wi-Fi Network Access Portal
+        </div>
+    </div>
+</body>
+</html>

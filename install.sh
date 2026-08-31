@@ -53,66 +53,77 @@ install_packages() {
             info "Installing packages via apt..."
             apt-get update -qq || warn "apt-get update failed, continuing..."
             apt-get install -y -qq python3 python3-pip python3-dev \
-                git iw wpa_supplicant pixiewps iproute2 wcwidth 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 wcwidth \
+                hostapd dnsmasq 2>/dev/null || \
             apt-get install -y python3 python3-pip python3-dev \
-                git iw wpa_supplicant iproute2 2>/dev/null || \
+                git iw wpa_supplicant iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         alpine)
             info "Installing packages via apk (--no-cache)..."
             apk add --no-cache \
                 python3 py3-pip python3-dev \
-                git iw wireless-tools wpa_supplicant iproute2 2>/dev/null || \
+                git iw wireless-tools wpa_supplicant iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             apk add --no-cache \
                 python3 py3-pip \
-                git iw wpa_supplicant iproute2 2>/dev/null || \
+                git iw wpa_supplicant iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             warn "Some Alpine packages could not be installed"
             ;;
         arch|manjaro|endeavouros)
             info "Installing packages via pacman..."
             pacman -Sy --noconfirm python python-pip python-wcwidth \
-                git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             pacman -Sy --noconfirm python python-pip \
-                git iw wpa_supplicant iproute2 2>/dev/null || \
+                git iw wpa_supplicant iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         fedora|rhel|centos|rocky|almalinux)
             info "Installing packages via dnf/yum..."
             dnf install -y python3 python3-pip python3-devel \
-                git iw wpa_supplicant pixiewps iproute 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute \
+                hostapd dnsmasq 2>/dev/null || \
             yum install -y python3 python3-pip python3-devel \
-                git iw wpa_supplicant iproute 2>/dev/null || \
+                git iw wpa_supplicant iproute \
+                hostapd dnsmasq 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         opensuse*|sles)
             info "Installing packages via zypper..."
             zypper install -y python3 python3-pip python3-devel \
-                git iw wpa_supplicant pixiewps iproute2 2>/dev/null || \
+                git iw wpa_supplicant pixiewps iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             zypper install -y python3 python3-pip python3-devel \
-                git iw wpa_supplicant iproute2 2>/dev/null || \
+                git iw wpa_supplicant iproute2 \
+                hostapd dnsmasq 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         void)
             info "Installing packages via xbps..."
             xbps-install -SuY python3 python3-pip \
-                git iw wpa_supplicant pixiewps iproute2 || \
+                git iw wpa_supplicant pixiewps iproute2 \
+                hostapd dnsmasq || \
             warn "Some packages could not be installed"
             ;;
         *)
             warn "Unknown distro (${DISTRO_ID}). Trying common package managers..."
             if command -v apt-get &>/dev/null; then
                 apt-get update -qq || true
-                apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
+                apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
             elif command -v apk &>/dev/null; then
-                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2 || true
+                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
             elif command -v pacman &>/dev/null; then
-                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2 || true
+                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
             elif command -v dnf &>/dev/null; then
-                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
+                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
             elif command -v zypper &>/dev/null; then
-                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2 || true
+                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
             else
-                warn "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2"
+                warn "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2, hostapd, dnsmasq"
             fi
             ;;
     esac
@@ -146,6 +157,14 @@ check_requirements() {
         warn "pixiewps not found — Pixie Dust attacks will not work."
         warn "Install it from your package manager or build from source."
     fi
+    if ! command -v hostapd &>/dev/null; then
+        warn "hostapd not found — AP Mode will not work."
+        warn "Install it from your package manager."
+    fi
+    if ! command -v dnsmasq &>/dev/null; then
+        warn "dnsmasq not found — AP Mode DHCP/DNS will not work."
+        warn "Install it from your package manager."
+    fi
 }
 
 # ── Install oneshot.py ────────────────────────────────────────
@@ -165,6 +184,20 @@ install_oneshot() {
     if [ -f "$SCRIPT_DIR/vulnwsc.txt" ]; then
         cp "$SCRIPT_DIR/vulnwsc.txt" "$TOOL_DIR/vulnwsc.txt"
         info "Copied vulnwsc.txt to ${TOOL_DIR}/"
+    fi
+
+    # Copy ap_mode.py for AP Mode feature
+    if [ -f "$SCRIPT_DIR/ap_mode.py" ]; then
+        cp "$SCRIPT_DIR/ap_mode.py" "$TOOL_DIR/ap_mode.py"
+        info "Copied ap_mode.py to ${TOOL_DIR}/"
+    fi
+
+    # Copy captive portal templates + catalog
+    if [ -d "$SCRIPT_DIR/captive_portal" ]; then
+        mkdir -p "$TOOL_DIR/captive_portal"
+        cp -r "$SCRIPT_DIR/captive_portal/"* "$TOOL_DIR/captive_portal/" 2>/dev/null || true
+        CATALOG_COUNT=$(find "$TOOL_DIR/captive_portal/catalog" -name '*.html' 2>/dev/null | wc -l)
+        info "Copied captive_portal/ to ${TOOL_DIR}/ (${CATALOG_COUNT} catalog templates)"
     fi
 
     chmod +x "$TOOL_DIR/oneshot.py"
@@ -193,12 +226,15 @@ TMP_DIR=$(mktemp -d)
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-# ── Handle -u / --update ─────────────────────────────────────
+# ── Handle -u / --update / --ap-mode ─────────────────────────
 UPDATE_MODE=0
+AP_MODE=0
 for arg in "$@"; do
     if [ "$arg" = "-u" ] || [ "$arg" = "--update" ]; then
         UPDATE_MODE=1
-        break
+    fi
+    if [ "$arg" = "-a" ] || [ "$arg" = "--ap-mode" ]; then
+        AP_MODE=1
     fi
 done
 
@@ -410,21 +446,59 @@ SELECTED=$(printf '%s' "$SELECTED" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:s
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
-# ── Build args to forward to oneshot.py ──
-# Only forward option flags (starting with '-'). Drop positional tokens such as
-# a stray interface name, because the interface is already passed via -i.
-CLEAN_ARGS=""
-for arg in "$@"; do
-    case "$arg" in
-        -u|--update) continue ;;
-        -*)
-            CLEAN_ARGS="${CLEAN_ARGS} ${arg}" ;;
+# ── Mode Selection: WiFi Attack or AP Mode? ──
+if [ "$AP_MODE" -eq 1 ]; then
+    MODE_CHOICE=2
+else
+echo -e "\033[1;36m╔══════════════════════════════════════════════════╗\033[0m"
+echo -e "\033[1;36m║\033[0m  \033[1;97mSelect Mode\033[0m                                  \033[1;36m║\033[0m"
+echo -e "\033[1;36m╚══════════════════════════════════════════════════╝\033[0m"
+echo ""
+echo -e "    \033[1;33m1)\033[0m \033[1;97mWiFi Attack\033[0m  \033[90m— Pixie Dust / Bruteforce / PBC\033[0m"
+echo -e "    \033[1;33m2)\033[0m \033[1;97mAP Mode\033[0m     \033[90m— Create Rogue AP / Captive Portal / DNS Logger\033[0m"
+echo ""
+
+MODE_CHOICE=""
+while true; do
+    printf "  Select mode [1-2]: "
+    read -r MODE_CHOICE
+    case "$MODE_CHOICE" in
+        1|2)
+            break
+            ;;
+        *)
+            echo -e "\033[1;31m[!] Please enter 1 or 2\033[0m"
+            ;;
     esac
 done
+fi
 
-# ── Run OneShot with -k (kill) and -K (Pixie Dust) by default ─
-echo -e "\033[90m[~] Launching: python3 $TOOL -i $SELECTED -k -K$CLEAN_ARGS\033[0m"
-exec python3 "$TOOL" -i "$SELECTED" -k -K $CLEAN_ARGS
+AP_TOOL="$TOOL_DIR/ap_mode.py"
+
+if [ "$MODE_CHOICE" = "2" ]; then
+    # ── AP Mode ──
+    echo ""
+    echo -e "\033[90m[~] Launching AP Mode: python3 $AP_TOOL -i $SELECTED\033[0m"
+    echo ""
+    if [ ! -f "$AP_TOOL" ]; then
+        echo -e "\033[1;31m[!] ap_mode.py not found at $AP_TOOL\033[0m"
+        echo "    Re-run: sudo bash install.sh"
+        exit 1
+    fi
+    exec python3 "$AP_TOOL" -i "$SELECTED"
+else
+    # ── WiFi Attack Mode (existing) ──
+    CLEAN_ARGS=""
+    for arg in "$@"; do
+        case "$arg" in
+            -u|--update) continue ;;
+            -*)
+                CLEAN_ARGS="${CLEAN_ARGS} ${arg}" ;;
+        esac
+    done
+    echo -e "\033[90m[~] Launching: python3 $TOOL -i $SELECTED -k -K$CLEAN_ARGS\033[0m"
+    exec python3 "$TOOL" -i "$SELECTED" -k -K $CLEAN_ARGS
+fi
 WIFI4_EOF
 
     chmod +x "${INSTALL_DIR}/${COMMAND_NAME}"
@@ -460,6 +534,8 @@ main() {
     echo -e "    sudo wifi4 -B               ${YELLOW}# Bruteforce attack${RESET}"
     echo -e "    sudo wifi4 --pbc            ${YELLOW}# Push Button Connect${RESET}"
     echo -e "    sudo wifi4 -b <BSSID> -K    ${YELLOW}# Direct target attack${RESET}"
+    echo -e "    sudo wifi4 -a               ${YELLOW}# AP Mode (Captive Portal)${RESET}"
+    echo -e "    sudo wifi4 --ap-mode        ${YELLOW}# AP Mode (Captive Portal)${RESET}"
     echo ""
     echo -e "  ${CYAN}Direct usage:${RESET}"
     echo -e "    python3 ${TOOL_DIR}/oneshot.py -i wlan0 -k -K"

