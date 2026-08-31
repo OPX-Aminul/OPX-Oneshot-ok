@@ -295,8 +295,6 @@ interface={interface}
 bind-interfaces
 no-resolv
 no-poll
-server=8.8.8.8
-server=1.1.1.1
 dhcp-range={AP_DHCP_START},{AP_DHCP_END},255.255.255.0,24h
 dhcp-option=option:router,{AP_IP}
 dhcp-option=option:dns-server,{AP_IP}
@@ -329,15 +327,9 @@ address=/connect.rom.miui.com/{AP_IP}
 address=/wifi.vivo.com.cn/{AP_IP}
 address=/nmcheck.gnome.org/{AP_IP}
 address=/kindle-wifi.com/{AP_IP}
-# Disable DNSSEC to prevent validation failures
-dnssec-no-validation
 # Log all queries
 log-queries
 log-facility={DNS_LOG}
-# Never forward non-existing domains
-bogus-priv
-# Accept queries for local network only
-domain-needed
 """
     path = DNSMASQ_CONF
     with open(path, "w") as f:
