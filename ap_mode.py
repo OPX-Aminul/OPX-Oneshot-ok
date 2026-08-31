@@ -293,6 +293,10 @@ def generate_dnsmasq_conf(interface: str, dns_only: bool = False) -> str:
     conf = f"""# WiFi4 AP Mode — dnsmasq config
 interface={interface}
 bind-interfaces
+no-resolv
+no-poll
+server=8.8.8.8
+server=1.1.1.1
 dhcp-range={AP_DHCP_START},{AP_DHCP_END},255.255.255.0,24h
 dhcp-option=option:router,{AP_IP}
 dhcp-option=option:dns-server,{AP_IP}
@@ -307,12 +311,33 @@ log-facility={DNS_LOG}
 address=/#/{AP_IP}
 """
     else:
-        # Captive portal mode: redirect all HTTP to our server
+        # Captive portal mode: ALL domains resolve to our AP IP
+        # This triggers captive portal on every device (Android, iOS, Windows, etc.)
         conf += f"""
-# Captive portal mode: redirect all DNS to AP IP
+# Captive portal mode: ALL domains → AP IP
 address=/#/{AP_IP}
+# Also handle common captive portal detection URLs explicitly
+address=/connectivitycheck.gstatic.com/{AP_IP}
+address=/clients3.google.com/{AP_IP}
+address=/play.googleapis.com/{AP_IP}
+address=/captive.apple.com/{AP_IP}
+address=/www.apple.com/{AP_IP}
+address=/www.msftconnecttest.com/{AP_IP}
+address=/www.msftncsi.com/{AP_IP}
+address=/detectportal.firefox.com/{AP_IP}
+address=/connect.rom.miui.com/{AP_IP}
+address=/wifi.vivo.com.cn/{AP_IP}
+address=/nmcheck.gnome.org/{AP_IP}
+address=/kindle-wifi.com/{AP_IP}
+# Disable DNSSEC to prevent validation failures
+dnssec-no-validation
+# Log all queries
 log-queries
 log-facility={DNS_LOG}
+# Never forward non-existing domains
+bogus-priv
+# Accept queries for local network only
+domain-needed
 """
     path = DNSMASQ_CONF
     with open(path, "w") as f:
@@ -370,7 +395,7 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
         "/ncsi.txt",
         "/redirect",
         "/connecttest",
-        "/ncsi真实性",
+        "/ncsi.txt",
     ]
 
     # Chrome OS / Chromium: expects 204 if no portal
@@ -559,13 +584,13 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
     def _redirect_to_portal(self):
         """302 redirect to our captive portal — triggers popup on all OS."""
         self.send_response(302)
-        self.send_header("Location", f"http://{AP_IP}:8080/")
+        self.send_header("Location", f"http://{AP_IP}/")
         self.send_header("Content-Type", "text/html")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(
             b"<HTML><HEAD><TITLE>302 Found</TITLE></HEAD>"
-            b"<BODY><A HREF=\"http://" + AP_IP.encode() + b":8080/\">Portal</A></BODY></HTML>"
+            b"<BODY><A HREF=\"http://" + AP_IP.encode() + b"/\">Portal</A></BODY></HTML>"
         )
 
     def _serve_portal(self):
@@ -724,22 +749,16 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
             "-j", "ACCEPT"
         ], capture_output=True, timeout=5)
 
-        # Allow HTTP to our captive portal server (port 8080)
+        # Allow HTTP to our captive portal server (port 80)
         subprocess.run([
             "iptables", "-A", "INPUT",
             "-i", ap_interface,
-            "-p", "tcp", "--dport", "8080",
+            "-p", "tcp", "--dport", "80",
             "-j", "ACCEPT"
         ], capture_output=True, timeout=5)
 
-        # Redirect ALL HTTP (port 80) traffic to our captive portal server
-        # This is the key rule — makes every HTTP request hit our portal
-        subprocess.run([
-            "iptables", "-t", "nat", "-A", "PREROUTING",
-            "-i", ap_interface,
-            "-p", "tcp", "--dport", "80",
-            "-j", "DNAT", "--to-destination", f"{AP_IP}:8080"
-        ], capture_output=True, timeout=5)
+        # NOTE: Captive portal server now listens on port 80 directly
+        # No iptables redirect needed — the server handles all HTTP on port 80
 
         # Block all other forwarding (except DNS/DHCP which are handled above)
         # This forces devices into captive portal mode — they can't reach the internet
@@ -951,7 +970,7 @@ class APManager:
             # When internet_before_form is True: allow all traffic (no blocking)
             # When internet_before_form is False: block all, grant after form submit
             self.portal_server = CaptivePortalServer(
-                port=8080,
+                port=80,
                 portal_html=portal_html,
                 success_html=success_html,
                 grant_internet_after_submit=not internet_before,  # True when we need to block+grant
@@ -971,7 +990,7 @@ class APManager:
         RealtimeLogger.info(f"  IP        : {AP_IP}")
         RealtimeLogger.info(f"  DHCP Range: {AP_DHCP_START} — {AP_DHCP_END}")
         if not dns_only:
-            RealtimeLogger.info(f"  Portal    : http://{AP_IP}:8080")
+            RealtimeLogger.info(f"  Portal    : http://{AP_IP}:80")
         if enable_internet:
             RealtimeLogger.ok("  Internet  : ENABLED (NAT forwarding)")
         else:
