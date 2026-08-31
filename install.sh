@@ -188,6 +188,10 @@ TOOL_DIR="/opt/oneshot"
 TOOL="$TOOL_DIR/oneshot.py"
 VULN_FILE="$TOOL_DIR/vulnwsc.txt"
 REPO_RAW="https://raw.githubusercontent.com/OPX-Aminul/OPX-Oneshot-ok/main"
+TMP_DIR=$(mktemp -d)
+
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT
 
 # ── Handle -u / --update ─────────────────────────────────────
 UPDATE_MODE=0
@@ -205,7 +209,6 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
     echo -e "\033[1;36m╚══════════════════════════════════════════════════╝\033[0m"
     echo ""
 
-    # Check for curl or wget
     DOWNLOADER=""
     if command -v curl &>/dev/null; then
         DOWNLOADER="curl"
@@ -220,13 +223,11 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
     echo -e "\033[90m    Repo: OPX-Aminul/OPX-Oneshot-ok\033[0m"
     echo ""
 
-    # Backup current version
     if [ -f "$TOOL" ]; then
         cp "$TOOL" "${TOOL}.bak"
         echo -e "\033[90m    [~] Backed up current version\033[0m"
     fi
 
-    # Download oneshot.py
     echo -ne "\033[1;33m    [↓] Downloading oneshot.py...\033[0m"
     if [ "$DOWNLOADER" = "curl" ]; then
         curl -sL -o "$TOOL" "${REPO_RAW}/oneshot.py"
@@ -239,7 +240,6 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
     else
         echo -e "\033[1;31m FAILED\033[0m"
         echo -e "\033[1;31m[!] Failed to download oneshot.py. Check your internet connection.\033[0m"
-        # Restore backup
         if [ -f "${TOOL}.bak" ]; then
             mv "${TOOL}.bak" "$TOOL"
             echo -e "\033[90m    [~] Restored previous version\033[0m"
@@ -247,7 +247,6 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
         exit 1
     fi
 
-    # Download vulnwsc.txt
     echo -ne "\033[1;33m    [↓] Downloading vulnwsc.txt...\033[0m"
     if [ "$DOWNLOADER" = "curl" ]; then
         curl -sL -o "$VULN_FILE" "${REPO_RAW}/vulnwsc.txt"
@@ -261,10 +260,7 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
         echo -e "\033[1;33m SKIP\033[0m \033[90m(using existing database)\033[0m"
     fi
 
-    # Remove backup on success
     rm -f "${TOOL}.bak"
-
-    # Show installed version
     echo ""
     echo -e "\033[1;32m[✓] Update complete!\033[0m"
     echo -e "\033[90m    Installed: $TOOL\033[0m"
@@ -287,55 +283,45 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# ── Auto-detect WiFi interfaces ───────────────────────────────
+# ── Auto-detect WiFi interfaces (POSIX-compatible, no process substitution) ─
 echo -e "\033[1;36m[*] Scanning for WiFi interfaces...\033[0m"
 
-INTERFACES=()
-while IFS= read -r iface; do
-    INTERFACES+=("$iface")
-done < <(iw dev 2>/dev/null | awk '/Interface/{print $2}')
+IFACES_FILE="$TMP_DIR/ifaces.txt"
+> "$IFACES_FILE"
 
-# Also check ip link for wireless interfaces
-while IFS= read -r iface; do
-    # Skip if already in list
-    found=0
-    for existing in "${INTERFACES[@]}"; do
-        if [ "$existing" = "$iface" ]; then
-            found=1
-            break
-        fi
-    done
-    if [ "$found" -eq 0 ]; then
-        INTERFACES+=("$iface")
-    fi
-done < <(ip link show 2>/dev/null | awk -F': ' '/^[0-9]+:/{gsub(/@.*/, "", $2); print $2}' | grep -E '^(wlan|wlp|ath|wlx)')
+# Method 1: iw dev
+iw dev 2>/dev/null | awk '/Interface/{print $2}' >> "$IFACES_FILE"
 
-# Fallback: also check iwconfig for systems where iw is not installed
-if [ ${#INTERFACES[@]} -eq 0 ] && command -v iwconfig &>/dev/null; then
-    while IFS= read -r iface; do
-        found=0
-        for existing in "${INTERFACES[@]}"; do
-            if [ "$existing" = "$iface" ]; then
-                found=1
-                break
-            fi
-        done
-        if [ "$found" -eq 0 ]; then
-            INTERFACES+=("$iface")
-        fi
-    done < <(iwconfig 2>/dev/null | awk '{print $1}' | grep -v "lo\|eth")
+# Method 2: ip link (wlan/wlp/ath/wlx)
+ip link show 2>/dev/null | awk -F': ' '/^[0-9]+:/{gsub(/@.*/, "", $2); print $2}' | grep -E '^(wlan|wlp|ath|wlx)' >> "$IFACES_FILE"
+
+# Method 3: iwconfig fallback (if iw not found)
+if [ ! -s "$IFACES_FILE" ] && command -v iwconfig &>/dev/null; then
+    iwconfig 2>/dev/null | awk '{print $1}' | grep -v "lo\|eth" >> "$IFACES_FILE"
 fi
 
-# Remove 'lo' and empty entries
-FILTERED=()
-for iface in "${INTERFACES[@]}"; do
-    if [ -n "$iface" ] && [ "$iface" != "lo" ]; then
-        FILTERED+=("$iface")
-    fi
-done
-INTERFACES=("${FILTERED[@]}")
+# Deduplicate and filter
+DEDUP_FILE="$TMP_DIR/ifaces_dedup.txt"
+sort -u "$IFACES_FILE" | grep -v '^lo$' | grep -v '^$' > "$DEDUP_FILE"
 
-if [ ${#INTERFACES[@]} -eq 0 ]; then
+# Read into array (POSIX-compatible)
+IFACES=""
+if [ -s "$DEDUP_FILE" ]; then
+    while IFS= read -r line; do
+        IFACES="${IFACES}${line} "
+    done < "$DEDUP_FILE"
+fi
+
+# Convert to array
+set -- $IFACES
+IFACE_COUNT=0
+IFACE_LIST=""
+for iface in "$@"; do
+    IFACE_COUNT=$((IFACE_COUNT + 1))
+    IFACE_LIST="${IFACE_LIST}${IFACE_COUNT}) ${iface}  "
+done
+
+if [ "$IFACE_COUNT" -eq 0 ]; then
     echo -e "\033[1;31m[!] No WiFi interfaces found.\033[0m"
     echo "    Make sure a WiFi adapter is connected."
     exit 1
@@ -344,33 +330,53 @@ fi
 # ── Prompt user to select interface ───────────────────────────
 echo ""
 echo -e "\033[1;32m[*] Available WiFi interfaces:\033[0m"
-for i in "${!INTERFACES[@]}"; do
-    echo -e "    \033[1;33m$((i+1)))\033[0m ${INTERFACES[$i]}"
+set -- $IFACES
+IDX=0
+for iface in "$@"; do
+    IDX=$((IDX + 1))
+    echo -e "    \033[1;33m${IDX})\033[0m ${iface}"
 done
 echo ""
 
+SELECTED=""
 while true; do
-    read -rp "Select interface [1-${#INTERFACES[@]}]: " choice
-    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#INTERFACES[@]}" ]; then
-        SELECTED="${INTERFACES[$((choice-1))]}"
+    printf "Select interface [1-%d]: " "$IFACE_COUNT"
+    read -r choice
+    case "$choice" in
+        ''|*[!0-9]*)
+            echo -e "\033[1;31m[!] Enter a number.\033[0m"
+            continue
+            ;;
+    esac
+    if [ "$choice" -ge 1 ] 2>/dev/null && [ "$choice" -le "$IFACE_COUNT" ] 2>/dev/null; then
+        set -- $IFACES
+        IDX=0
+        for iface in "$@"; do
+            IDX=$((IDX + 1))
+            if [ "$IDX" -eq "$choice" ]; then
+                SELECTED="$iface"
+                break
+            fi
+        done
         break
     fi
-    echo -e "\033[1;31m[!] Invalid choice. Enter a number between 1 and ${#INTERFACES[@]}.\033[0m"
+    echo -e "\033[1;31m[!] Invalid choice. Enter a number between 1 and ${IFACE_COUNT}.\033[0m"
 done
 
 echo -e "\033[1;32m[*] Using interface: ${SELECTED}\033[0m"
 echo ""
 
 # ── Filter out -u from args before passing to oneshot.py ──
-CLEAN_ARGS=()
+CLEAN_ARGS=""
 for arg in "$@"; do
-    if [ "$arg" != "-u" ] && [ "$arg" != "--update" ]; then
-        CLEAN_ARGS+=("$arg")
-    fi
+    case "$arg" in
+        -u|--update) continue ;;
+        *) CLEAN_ARGS="${CLEAN_ARGS} ${arg}" ;;
+    esac
 done
 
 # ── Run OneShot with -k (kill) and -K (Pixie Dust) by default ─
-exec python3 "$TOOL" -i "$SELECTED" -k -K "${CLEAN_ARGS[@]}"
+exec python3 "$TOOL" -i "$SELECTED" -k -K $CLEAN_ARGS
 WIFI4_EOF
 
     chmod +x "${INSTALL_DIR}/${COMMAND_NAME}"
