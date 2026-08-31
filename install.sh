@@ -54,10 +54,11 @@ install_packages() {
             apt-get update -qq || warn "apt-get update failed, continuing..."
             apt-get install -y -qq python3 python3-pip python3-dev \
                 git iw wpa_supplicant pixiewps iproute2 wcwidth \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables iptables-persistent \
+                net-tools wireless-tools 2>/dev/null || \
             apt-get install -y python3 python3-pip python3-dev \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables net-tools wireless-tools 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         alpine)
@@ -65,65 +66,65 @@ install_packages() {
             apk add --no-cache \
                 python3 py3-pip python3-dev \
                 git iw wireless-tools wpa_supplicant iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables wireless-tools 2>/dev/null || \
             apk add --no-cache \
                 python3 py3-pip \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             warn "Some Alpine packages could not be installed"
             ;;
         arch|manjaro|endeavouros)
             info "Installing packages via pacman..."
             pacman -Sy --noconfirm python python-pip python-wcwidth \
                 git iw wpa_supplicant pixiewps iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             pacman -Sy --noconfirm python python-pip \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         fedora|rhel|centos|rocky|almalinux)
             info "Installing packages via dnf/yum..."
             dnf install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant pixiewps iproute \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             yum install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant iproute \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         opensuse*|sles)
             info "Installing packages via zypper..."
             zypper install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant pixiewps iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             zypper install -y python3 python3-pip python3-devel \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq 2>/dev/null || \
+                hostapd dnsmasq iptables 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         void)
             info "Installing packages via xbps..."
             xbps-install -SuY python3 python3-pip \
                 git iw wpa_supplicant pixiewps iproute2 \
-                hostapd dnsmasq || \
+                hostapd dnsmasq iptables || \
             warn "Some packages could not be installed"
             ;;
         *)
             warn "Unknown distro (${DISTRO_ID}). Trying common package managers..."
             if command -v apt-get &>/dev/null; then
                 apt-get update -qq || true
-                apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
+                apt-get install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq iptables net-tools || true
             elif command -v apk &>/dev/null; then
-                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
+                apk add --no-cache python3 py3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq iptables || true
             elif command -v pacman &>/dev/null; then
-                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
+                pacman -Sy --noconfirm python python-pip git iw wpa_supplicant iproute2 hostapd dnsmasq iptables || true
             elif command -v dnf &>/dev/null; then
-                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
+                dnf install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq iptables || true
             elif command -v zypper &>/dev/null; then
-                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq || true
+                zypper install -y python3 python3-pip git iw wpa_supplicant iproute2 hostapd dnsmasq iptables || true
             else
-                warn "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2, hostapd, dnsmasq"
+                warn "No supported package manager found. Install manually: python3, iw, wpa_supplicant, iproute2, hostapd, dnsmasq, iptables"
             fi
             ;;
     esac

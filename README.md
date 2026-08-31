@@ -26,9 +26,26 @@ WiFi4 is a powerful WPS (Wi-Fi Protected Setup) penetration testing tool with a 
 - **Live Dashboard** — Real-time capture stats, per-user tracking, client details
 - **DNS Logger** — Log all DNS queries from connected clients
 - **Internet Forwarding** — Optional NAT-based internet access through AP
-- **Captive Portal Detection** — Bypasses Android 5-16, iOS/Android, Windows, ChromeOS, Kindle
 - **Internet Before Form** — Choose if internet works immediately or only after form submit
 - **Session Data** — All captures saved to timestamped folders
+
+### Captive Portal Detection (All Platforms)
+
+| Platform | Probe URL | Response | Status |
+|----------|-----------|----------|--------|
+| Android 5-16 | `connectivitycheck.gstatic.com/generate_204` | 302 redirect | ✅ |
+| Android (fallback) | `play.googleapis.com/generate_204` | 302 redirect | ✅ |
+| Android (fallback) | `clients3.google.com/generate_204` | 302 redirect | ✅ |
+| iOS / macOS | `captive.apple.com/hotspot-detect.html` | 302 redirect | ✅ |
+| iOS (fallback) | `www.apple.com/library/test/success.html` | 302 redirect | ✅ |
+| Windows NCSI | `www.msftconnecttest.com/connecttest.txt` | 302 redirect | ✅ |
+| Windows (fallback) | `www.msftncsi.com/ncsi.txt` | 302 redirect | ✅ |
+| ChromeOS / Chromium | `clients3.google.com/gen_204` | 302 redirect | ✅ |
+| Firefox | `detectportal.firefox.com/canonical.html` | 302 redirect | ✅ |
+| Firefox (fallback) | `detectportal.firefox.com/success.txt` | 302 redirect | ✅ |
+| Linux NetworkManager | `nmcheck.gnome.org/check_network_status.txt` | 302 redirect | ✅ |
+| FireOS / Kindle | `kindle-wifi/wifistub.html` | 302 redirect | ✅ |
+| Chromium (Android) | `connectivitycheck.gstatic.com/curl.txt` | 302 redirect | ✅ |
 
 ## 🚀 Quick Install
 

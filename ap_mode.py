@@ -345,31 +345,48 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
 
     # ── Portal detection URL sets ──────────────────────────
     # Android 5-16: expects 302 redirect for these → triggers popup
+    # Primary: connectivitycheck.gstatic.com/generate_204
+    # Fallback: play.googleapis.com/generate_204
     ANDROID_PROBES = [
         "/generate_204",
         "/gen_204",
         "/curl.txt",
+        "/success.txt",
+        "/canonical.html",
     ]
 
-    # iOS / macOS CNA: expects 200 with specific content for these
+    # iOS / macOS CNA: expects 200 with '<HTML><HEAD><TITLE>Success</TITLE>...'
+    # We return 302 instead → iOS shows CNA popup
     IOS_PROBES = [
         "/hotspot-detect.html",
         "/library/test/success.html",
         "/success.txt",
     ]
 
-    # Windows NCSI: expects 200 with specific text
+    # Windows NCSI: expects 200 with 'Microsoft Connect Test'
+    # Returning 302 triggers portal popup
     WINDOWS_PROBES = [
         "/connecttest.txt",
         "/ncsi.txt",
         "/redirect",
         "/connecttest",
+        "/ncsi真实性",
     ]
 
-    # Chrome OS / Chromium
+    # Chrome OS / Chromium: expects 204 if no portal
     CHROME_PROBES = [
         "/gen_204",
+        "/generate_204",
         "/curl.txt",
+    ]
+
+    # Firefox: expects 200 with '<HTML><HEAD><TITLE>Success</TITLE>...'
+    # We return 302 → Firefox shows captive portal bar
+    FIREFOX_PROBES = [
+        "/canonical.html",
+        "/success.txt",
+        "/generate_204",
+        "/gen_204",
     ]
 
     # FireOS / Kindle
@@ -378,7 +395,7 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
         "/kindle-wifi/",
     ]
 
-    # Linux NetworkManager
+    # Linux NetworkManager: nmcheck.gnome.org/check_network_status.txt
     NM_PROBES = [
         "/check_network_status.txt",
     ]
@@ -430,6 +447,13 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
         # ── Linux NetworkManager Detection ─────────────────
         if any(p in path for p in self.NM_PROBES):
             RealtimeLogger.info(f"Linux NM probe detected from {client_ip}: {self.path}")
+            self._redirect_to_portal()
+            return
+
+        # ── Firefox Captive Portal Detection ───────────────
+        # Firefox probes detectportal.firefox.com/canonical.html
+        if any(p in path for p in self.FIREFOX_PROBES):
+            RealtimeLogger.info(f"Firefox probe detected from {client_ip}: {self.path}")
             self._redirect_to_portal()
             return
 
@@ -676,6 +700,54 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
         # Flush existing iptables rules
         subprocess.run(["iptables", "-F"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-t", "nat", "-F"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-t", "mangle", "-F"], capture_output=True, timeout=5)
+
+        # Allow DHCP and DNS (port 53) from AP subnet — essential for captive portal
+        subprocess.run([
+            "iptables", "-A", "INPUT",
+            "-i", ap_interface,
+            "-p", "udp", "--dport", "67:68",
+            "-j", "ACCEPT"
+        ], capture_output=True, timeout=5)
+
+        subprocess.run([
+            "iptables", "-A", "INPUT",
+            "-i", ap_interface,
+            "-p", "udp", "--dport", "53",
+            "-j", "ACCEPT"
+        ], capture_output=True, timeout=5)
+
+        subprocess.run([
+            "iptables", "-A", "INPUT",
+            "-i", ap_interface,
+            "-p", "tcp", "--dport", "53",
+            "-j", "ACCEPT"
+        ], capture_output=True, timeout=5)
+
+        # Allow HTTP to our captive portal server (port 8080)
+        subprocess.run([
+            "iptables", "-A", "INPUT",
+            "-i", ap_interface,
+            "-p", "tcp", "--dport", "8080",
+            "-j", "ACCEPT"
+        ], capture_output=True, timeout=5)
+
+        # Redirect ALL HTTP (port 80) traffic to our captive portal server
+        # This is the key rule — makes every HTTP request hit our portal
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface,
+            "-p", "tcp", "--dport", "80",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:8080"
+        ], capture_output=True, timeout=5)
+
+        # Block all other forwarding (except DNS/DHCP which are handled above)
+        # This forces devices into captive portal mode — they can't reach the internet
+        subprocess.run([
+            "iptables", "-A", "FORWARD",
+            "-i", ap_interface,
+            "-j", "DROP"
+        ], capture_output=True, timeout=5)
 
         # NAT: masquerade traffic from AP subnet through internet interface
         subprocess.run([
@@ -683,23 +755,6 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
             "-s", f"{AP_SUBNET}.0/24",
             "-o", internet_interface,
             "-j", "MASQUERADE"
-        ], capture_output=True, timeout=5)
-
-        # Allow forwarding
-        subprocess.run([
-            "iptables", "-A", "FORWARD",
-            "-i", ap_interface,
-            "-o", internet_interface,
-            "-j", "ACCEPT"
-        ], capture_output=True, timeout=5)
-
-        subprocess.run([
-            "iptables", "-A", "FORWARD",
-            "-i", internet_interface,
-            "-o", ap_interface,
-            "-m", "state",
-            "--state", "RELATED,ESTABLISHED",
-            "-j", "ACCEPT"
         ], capture_output=True, timeout=5)
 
         RealtimeLogger.ok("Internet forwarding (NAT) configured")
