@@ -805,9 +805,10 @@ def setup_captive_portal_firewall(ap_interface: str):
         # Allow HTTP to our captive portal server (port 80)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # Block Private DNS (port 853) — forces phones to use our dnsmasq
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "DROP"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "DROP"], capture_output=True, timeout=5)
+        # REDIRECT Private DNS (port 853) to our dnsmasq (port 53)
+        # This makes phones think Private DNS works — no error popup!
+        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
 
         # Block HTTPS to external servers (prevents DoH bypass)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "DROP"], capture_output=True, timeout=5)
