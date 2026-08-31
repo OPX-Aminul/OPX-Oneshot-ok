@@ -1495,57 +1495,168 @@ class WiFiScanner:
                 return text
             return text
 
-        if self.vuln_list:
-            print('Network marks: {1} {0} {2} {0} {3}'.format(
-                '|',
-                colored('Possibly vulnerable', color='green'),
-                colored('WPS locked', color='red'),
-                colored('Already stored', color='yellow')
-            ))
-        print('Networks list:')
-        print('{:<4} {:<18} {:<25} {:<8} {:<4} {:<5} {:<27} {:<}'.format(
-            '#', 'BSSID', 'ESSID', 'Sec.', 'PWR', 'Ver.', 'WSC device name', 'WSC model'))
+                # ── Premium Hacker-Style Card-Based Scanner UI ──
+        import re as _re
+
+        def _strip_ansi(s):
+            return _re.sub(r'\033\[[0-9;]*m', '', s)
+
+        def signal_bar(level, width=20):
+            pct = max(0, min(100, int((level + 90) * 100 / 60)))
+            filled = int(pct * width / 100)
+            empty = width - filled
+            if pct >= 70:
+                bar_color = '\033[92m'
+            elif pct >= 40:
+                bar_color = '\033[93m'
+            else:
+                bar_color = '\033[91m'
+            filled_ch = '\u2588' * filled
+            empty_ch = '\u2591' * empty
+            return bar_color + filled_ch + empty_ch + '\033[0m ' + str(pct).rjust(3) + '%'
+
+        def sec_icon(sec_type):
+            icons = {
+                'Open':  '\033[91m\U0001f513 OPEN\033[0m',
+                'WEP':   '\033[93m\U0001f512 WEP\033[0m',
+                'WPA':   '\033[96m\U0001f510 WPA\033[0m',
+                'WPA2':  '\033[92m\U0001f510 WPA2\033[0m',
+                'WPA/WPA2':  '\033[92m\U0001f510 WPA/WPA2\033[0m',
+                'WPA2/WPA3': '\033[92m\U0001f510 WPA2/WPA3\033[0m',
+            }
+            return icons.get(sec_type, '\U0001f512 ' + sec_type)
+
+        def card_color(network):
+            model = '{} {}'.format(network['Model'], network['Model number']).strip()
+            if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
+                return '\033[93m', 'ATTACKED'
+            elif network['WPS locked']:
+                return '\033[91m', 'LOCKED'
+            elif self.vuln_list and model and model in self.vuln_list:
+                return '\033[92m', 'VULNERABLE'
+            elif network['WPS version'] == '1.0':
+                return '\033[92m', 'WPS-1.0'
+            else:
+                return '\033[96m', ''
+
+        W = 62
+
+        # ── Print banner ──
+        print()
+        print('  \033[1;36m\u2554' + '\u2550' * W + '\u2557\033[0m')
+        print('  \033[1;36m\u2551\033[0m  \033[1;97m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\033[0m  \033[1;36m\u2551\033[0m')
+        print('  \033[1;36m\u2551\033[0m  \033[1;97m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\033[0m  \033[1;36m\u2551\033[0m')
+
+        n_detected = len(network_list)
+        title_line = '  WPS TARGET ACQUISITION SCANNER  v2.0'
+        print('  \033[1;36m\u2551\033[0m  \033[1;92m\u2554' + '\u2550' * 56 + '\u2557\033[0m  \033[1;36m\u2551\033[0m')
+        print('  \033[1;36m\u2551\033[0m  \033[1;92m\u2551\033[0m  \033[1;92m' + title_line + '\033[0m' + ' ' * 12 + '\033[1;92m\u2551\033[0m  \033[1;36m\u2551\033[0m')
+        print('  \033[1;36m\u2551\033[0m  \033[1;92m\u255a' + '\u2550' * 56 + '\u255d\033[0m  \033[1;36m\u2551\033[0m')
+        print('  \033[1;36m\u2551\033[0m  \033[1;97m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\033[0m  \033[1;36m\u2551\033[0m')
+
+        detect_text = str(n_detected) + ' TARGETS DETECTED'
+        pad_detect = W - len(detect_text) - 4
+        left_pad = pad_detect // 2
+        right_pad = pad_detect - left_pad
+        print('  \033[1;36m\u2551\033[0m  \033[1;97m\u2588\u2588' + ' ' * left_pad + '\033[1;33m' + detect_text + '\033[1;97m' + ' ' * right_pad + '\u2588\u2588\033[0m  \033[1;36m\u2551\033[0m')
+
+        print('  \033[1;36m\u2551\033[0m  \033[1;97m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\033[0m  \033[1;36m\u2551\033[0m')
+        print('  \033[1;36m' + '\u255a' + '\u2550' * W + '\u255d\033[0m')
+        print()
+        print('  \033[90m  \u25cf\033[0m = Previously attacked    \033[92m\u26a1\033[0m = Vulnerable / WPS 1.0    \033[91m\u2716\033[0m = WPS locked')
+        print()
 
         network_list_items = list(network_list.items())
         if args.reverse_scan:
             network_list_items = network_list_items[::-1]
+
         for n, network in network_list_items:
-            number = f'{n})'
-            model = '{} {}'.format(network['Model'], network['Model number'])
-            essid = truncateStr(network.get('ESSID', 'HIDDEN'), 25)
-            deviceName = truncateStr(network['Device name'], 27)
-    
-            # Processing the display width of other fields
-            processed_number = truncateStr(number, 4)
-            processed_bssid = truncateStr(network['BSSID'], 18)
-            processed_security = truncateStr(network['Security type'], 8)
-            processed_level = truncateStr(str(network['Level']), 4)
-            processed_device = deviceName  # 27 columns of width have been processed
-            processed_model = model  # Assuming that the model fields do not need to be truncated or have been processed
-            
-            # Directly concatenate the processed fields, separated by spaces in the middle
-            line_parts = [
-                processed_number,
-                processed_bssid,
-                essid,
-                processed_security,
-                processed_level,
-                truncateStr(network['WPS version'], 5),
-                processed_device,
-                processed_model
-            ]
-            line = ' '.join(line_parts)
-            
-            if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
-                print(colored(line, color='yellow'))
-            elif network['WPS version'] == '1.0':
-                print(colored(line, color='green'))
-            elif network['WPS locked']:
-                print(colored(line, color='red'))
-            elif self.vuln_list and (model in self.vuln_list):
-                print(colored(line, color='green'))
+            bc, status_tag = card_color(network)
+            model_name = network.get('Model', '')
+            model_num = network.get('Model number', '')
+            essid = network.get('ESSID', '')
+            if not essid:
+                essid_raw = '[ HIDDEN ]'
+                essid_display = '\033[90m[ HIDDEN ]\033[0m'
             else:
-                print(line)
+                essid_raw = essid
+                essid_display = '\033[1;97m' + essid + '\033[0m'
+            bssid = network['BSSID']
+            sec = network['Security type']
+            level = network['Level']
+            wps_ver = network['WPS version']
+
+            if status_tag:
+                if 'LOCKED' in status_tag:
+                    tag_str = '\033[91m\033[1m \u2716 ' + status_tag + ' \033[0m'
+                elif 'ATTACKED' in status_tag:
+                    tag_str = '\033[93m\033[1m \u25cf ' + status_tag + ' \033[0m'
+                else:
+                    tag_str = '\033[92m\033[1m \u26a1 ' + status_tag + ' \033[0m'
+            else:
+                tag_str = ''
+
+            if wps_ver == '1.0':
+                wps_badge = '\033[92m\033[1m WPS ' + wps_ver + ' \033[0m'
+            else:
+                wps_badge = '\033[90m WPS ' + wps_ver + ' \033[0m'
+
+            # ── Print card ──
+            num_str = '#' + str(n)
+
+            # Header: num + essid + status tag
+            clean_essid_len = len(essid_raw)
+            tag_clean_len = len(_strip_ansi(tag_str)) if tag_str else 0
+            if tag_str:
+                available = W - len(num_str) - clean_essid_len - tag_clean_len - 8
+                space_pad = ' ' * max(1, available)
+                print(bc + '\u250c\u2500' + '\u2500' * (W - 2) + '\u2510\033[0m')
+                print(bc + '\u2502\033[0m  \033[1;97m' + num_str + '\033[0m  ' + essid_display + space_pad + tag_str + '  ' + bc + '\u2502\033[0m')
+            else:
+                available = W - len(num_str) - clean_essid_len - 6
+                space_pad = ' ' * max(1, available)
+                print(bc + '\u250c\u2500' + '\u2500' * (W - 2) + '\u2510\033[0m')
+                print(bc + '\u2502\033[0m  \033[1;97m' + num_str + '\033[0m  ' + essid_display + space_pad + bc + '\u2502\033[0m')
+
+            # Separator
+            print(bc + '\u2502\033[0m  ' + '\u2500' * (W - 4) + '  ' + bc + '\u2502\033[0m')
+
+            # BSSID
+            bssid_pad = W - len(bssid) - 18
+            print(bc + '\u2502\033[0m  \033[90mMAC:\033[0m   \033[93m' + bssid + '\033[0m' + ' ' * max(0, bssid_pad) + bc + '\u2502\033[0m')
+
+            # Signal + WPS version
+            sig = signal_bar(level, 20)
+            # calculate visible width: "SIGNAL: " = 8, bar ~20+4+4=28, "  " = 2, badge ~10, rest to fill
+            sig_line = '\033[90mSIGNAL:\033[0m ' + sig + '    ' + wps_badge
+            sig_visible = 8 + 20 + 1 + 3 + 1 + 4 + len(_strip_ansi(wps_badge))
+            sig_pad = W - sig_visible - 6
+            if sig_pad > 0:
+                sig_line += ' ' * sig_pad
+            print(bc + '\u2502\033[0m  ' + sig_line + '  ' + bc + '\u2502\033[0m')
+
+            # Security
+            sec_str = sec_icon(sec)
+            sec_visible = 8 + len(_strip_ansi(sec_str))
+            sec_pad = W - sec_visible - 6
+            print(bc + '\u2502\033[0m  \033[90mSEC:\033[0m    ' + sec_str + ' ' * max(0, sec_pad) + bc + '\u2502\033[0m')
+
+            # Device info
+            dev_info = '{} {}'.format(model_name, model_num).strip()
+            if not dev_info:
+                dev_info = network.get('Device name', '')
+            if dev_info:
+                if len(dev_info) > W - 20:
+                    dev_info = dev_info[:W - 23] + '...'
+                dev_pad = W - len(dev_info) - 20
+                print(bc + '\u2502\033[0m  \033[90mDEVICE:\033[0m \033[97m' + dev_info + '\033[0m' + ' ' * max(0, dev_pad) + bc + '\u2502\033[0m')
+
+            # Footer
+            print(bc + '\u2514\u2500' + '\u2500' * (W - 2) + '\u2518\033[0m')
+            print()
+
+        # Bottom prompt
+        print('  \033[1;36m[\033[0m \033[1;97mSELECT TARGET\033[0m\033[90m (1-' + str(len(network_list)) + ')\033[0m  \033[90m| Press Enter to rescan\033[0m \033[1;36m]\033[0m')
 
         return network_list
 
