@@ -1194,7 +1194,7 @@ def launch_ap_mode(interface: str):
         print("  \033[1;36m│\033[0m  \033[1;97mCaptive Portal HTML Source\033[0m                   \033[1;36m│\033[0m")
         print("  \033[1;36m└──────────────────────────────────────────────┘\033[0m")
         print()
-        for num, label, _ in menu_options:
+        for num, label, *rest in menu_options:
             print(f"    \033[1;33m{num})\033[0m {label}")
         print()
 
