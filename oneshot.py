@@ -1044,10 +1044,11 @@ class Companion:
             RealtimeLogger.ok(f'WPS command accepted by wpa_supplicant')
 
             while True:
-                if not ifaceUpCheck(self.interface):
-                    RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting.')
-                    self.connection_status.status = 'WPS_FAIL'
-                    break
+                if not _iface_oper_up(self.interface):
+                    if not ifaceUpCheck(self.interface):
+                        RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting.')
+                        self.connection_status.status = 'WPS_FAIL'
+                        break
 
                 res = self.__handle_wpas(pixiemode=pixiemode, pbc_mode=pbc_mode, verbose=verbose, bssid=bssid.lower() if bssid else '')
                 if not res:
@@ -1150,7 +1151,7 @@ class Companion:
     def __first_half_bruteforce(self, bssid, f_half, delay=None):
         checksum = self.generator.checksum
         while int(f_half) < 10000:
-            if not ifaceUpCheck(self.interface):
+            if (not _iface_oper_up(self.interface)) and (not ifaceUpCheck(self.interface)):
                 RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting bruteforce.')
                 return False
 
@@ -1180,7 +1181,7 @@ class Companion:
     def __second_half_bruteforce(self, bssid, f_half, s_half, delay=None):
         checksum = self.generator.checksum
         while int(s_half) < 1000:
-            if not ifaceUpCheck(self.interface):
+            if (not _iface_oper_up(self.interface)) and (not ifaceUpCheck(self.interface)):
                 RealtimeLogger.err(f'Interface {self.interface} is no longer UP. Aborting bruteforce.')
                 return False
 
@@ -1700,16 +1701,38 @@ def die(msg):
 
 
 def ifaceUpCheck(interface):
-    """Check if the network interface is still up."""
+    """Check if the network interface is still up (subprocess fallback)."""
     try:
-        cmd = f'ip link show {interface}'
-        r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
+        r = subprocess.run(['ip', 'link', 'show', interface],
+                           stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, encoding='utf-8', timeout=5)
         if r.returncode != 0:
             return False
         return 'UP' in r.stdout
     except (OSError, subprocess.TimeoutExpired):
         return False
+
+
+def _iface_oper_up(interface):
+    """Very fast interface-up check via sysfs (no subprocess spawn).
+
+    Reads /sys/class/net/<iface>/operstate or /sys/class/net/<iface>/flags
+    directly. Used inside the hot per-line connection loop where spawning an
+    'ip link' subprocess for every wpa_supplicant line is far too slow.
+    """
+    try:
+        with open(f'/sys/class/net/{interface}/operstate', 'r', encoding='utf-8') as f:
+            state = f.read().strip()
+        # 'unknown' / 'down' at boot can be treated as up-by-appearance; only
+        # the actual operstate values carry real meaning.
+        return state not in ('down', 'lowerlayerdown', 'notpresent', 'dormant')
+    except (OSError, IOError):
+        try:
+            with open(f'/sys/class/net/{interface}/flags', 'r', encoding='utf-8') as f:
+                flags = int(f.read().strip(), 16)
+            return bool(flags & 0x1)  # IFF_UP
+        except (OSError, IOError, ValueError):
+            return False
 
 
 def isAndroid():
