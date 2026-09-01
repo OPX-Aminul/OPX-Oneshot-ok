@@ -579,21 +579,28 @@ class CaptivePortalHandler(http.server.BaseHTTPRequestHandler):
 
     # ── Response helpers ─────────────────────────────────────
     def _redirect_to_portal(self):
-        """Serve portal directly + redirect — triggers popup on all OS including MIUI.
+        """Serve portal HTML directly with 200 OK — no redirect needed.
 
-        MIUI/Xiaomi captive portal browser does NOT follow 302 redirects.
-        So we serve the portal HTML directly in the response body AND
-        also send a Location header as fallback for other OS.
-        This ensures the popup shows content on every device.
+        WHY NOT 302 REDIRECT?
+        When Android/MIUI captive portal browser opens after detecting a 302,
+        it tries to navigate to the redirect URL. This requires ANOTHER DNS
+        lookup + HTTP request. With Private DNS enabled, this second lookup
+        fails → ERR_NAME_NOT_RESOLVED error.
+
+        BY RETURNING 200 OK WITH HTML INLINE:
+        - Android sees non-204 → triggers "Sign in to network" popup ✅
+        - WebView renders the HTML directly → no second HTTP request ✅
+        - MIUI shows the portal page immediately ✅
+        - No DNS resolution needed for the follow-up ✅
         """
-        # First try 302 redirect (works on stock Android, iOS, Windows)
-        self.send_response(302)
-        self.send_header("Location", f"http://{AP_IP}/")
+        # 200 OK — Android checks if status == 204
+        # Any non-204 status triggers captive portal popup
+        self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
-        # Also include the full portal HTML in the body
-        # MIUI browser renders the body directly without following redirect
         self.wfile.write(self.portal_html.encode("utf-8"))
 
     def _serve_portal(self):
@@ -830,9 +837,10 @@ def setup_captive_portal_firewall(ap_interface: str):
     """Block ALL outbound traffic from AP clients EXCEPT DNS/HTTP to our portal.
 
     This forces captive portal detection to work correctly:
-    - Blocks Private DNS (port 853) so phones MUST use our dnsmasq
+    - REJECTS Private DNS (port 853) with TCP RST → instant failure → plain DNS fallback
+    - REJECTS all external DNS (port 53 to non-local) → forced through our dnsmasq
     - Blocks all internet traffic so phones stay in captive portal mode
-    - Only allows DHCP, DNS (to us), and HTTP (to us)
+    - Only allows DHCP, DNS (to us), and HTTP/HTTPS (to us)
     """
     RealtimeLogger.step("Setting up captive portal firewall (blocking outbound)...")
     try:
@@ -851,10 +859,17 @@ def setup_captive_portal_firewall(ap_interface: str):
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # REDIRECT Private DNS (port 853) to our dnsmasq (port 53)
-        # This makes phones think Private DNS works — no error popup!
-        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REDIRECT", "--to-port", "53"], capture_output=True, timeout=5)
+        # REJECT Private DNS (port 853) with TCP RST — INSTANT failure
+        # This makes Android/ChromeOS fall back to plain DNS immediately
+        # DO NOT REDIRECT — TLS handshake mismatch causes hangs/timeout
+        # REJECT sends TCP RST → instant "Connection refused" → clean fallback
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REJECT", "--reject-with", "tcp-reset"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REJECT"], capture_output=True, timeout=5)
+
+        # Block ALL external DNS (port 53) forwarding — force through our dnsmasq
+        # Phone should NEVER reach 8.8.8.8, 1.1.1.1, dns.adguard.com, etc.
+        subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "REJECT"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "REJECT", "--reject-with", "tcp-reset"], capture_output=True, timeout=5)
 
         # Block ALL forwarding (internet)
         subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
@@ -863,7 +878,7 @@ def setup_captive_portal_firewall(ap_interface: str):
         # Block all other INPUT from AP (except what we allowed above)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
 
-        RealtimeLogger.ok("Captive portal firewall active — Private DNS blocked, all traffic forced through dnsmasq")
+        RealtimeLogger.ok("Captive portal firewall active — Private DNS REJECTED (instant fallback), all traffic forced through dnsmasq")
         return True
     except Exception as e:
         RealtimeLogger.warn(f"Firewall setup failed: {e}")
