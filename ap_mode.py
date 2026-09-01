@@ -16,6 +16,7 @@ import time
 import http.server
 import socketserver
 import ssl
+import socket
 import urllib.parse
 import json
 import re
@@ -659,7 +660,7 @@ class CaptivePortalServer:
         self.https_thread = None
 
     def start(self):
-        """Start HTTP and HTTPS servers in background threads."""
+        """Start HTTP, HTTPS, and DoT servers in background threads."""
         CaptivePortalHandler.portal_html = self.portal_html
         CaptivePortalHandler.success_html = self.success_html
         CaptivePortalHandler.capture_log = CAPTURED_LOG
@@ -688,13 +689,150 @@ class CaptivePortalServer:
             except Exception as e:
                 RealtimeLogger.warn(f"HTTPS server failed: {e}")
 
+        # DoT proxy (port 853) — intercepts Private DNS
+        self.dot_proxy = DoTProxy()
+        self.dot_proxy.start()
+
     def stop(self):
-        """Stop both HTTP and HTTPS servers."""
+        """Stop all servers."""
         if self.httpd:
             self.httpd.shutdown()
         if self.httpsd:
             self.httpsd.shutdown()
+        if hasattr(self, 'dot_proxy'):
+            self.dot_proxy.stop()
         RealtimeLogger.info("Captive portal servers stopped")
+
+
+# ──────────────────────────────────────────────────────────────
+# DNS-over-TLS (DoT) Proxy — intercepts Private DNS on port 853
+# ──────────────────────────────────────────────────────────────
+DOT_CERT = "/tmp/wifi4_dot.crt"
+DOT_KEY = "/tmp/wifi4_dot.key"
+
+
+def generate_dot_cert(hostname: str = "dns.adguard.com") -> bool:
+    """Generate self-signed SSL cert for DoT proxy."""
+    if os.path.exists(DOT_CERT) and os.path.exists(DOT_KEY):
+        return True
+    try:
+        subprocess.run([
+            "openssl", "req", "-x509", "-newkey", "rsa:2048",
+            "-keyout", DOT_KEY, "-out", DOT_CERT,
+            "-days", "365", "-nodes",
+            "/CN", f"{hostname}"
+        ], capture_output=True, timeout=10)
+        if os.path.exists(DOT_CERT) and os.path.exists(DOT_KEY):
+            return True
+    except Exception:
+        pass
+    # Fallback: generate using Python ssl module
+    try:
+        from subprocess import run as _run
+        _run([
+            "openssl", "req", "-x509", "-newkey", "rsa:2048",
+            "-keyout", DOT_KEY, "-out", DOT_CERT,
+            "-days", "365", "-nodes",
+            "-subj", f"/CN={hostname}"
+        ], capture_output=True, timeout=10)
+        return os.path.exists(DOT_CERT)
+    except Exception:
+        pass
+    return False
+
+
+class DoTProxy:
+    """DNS-over-TLS proxy: accepts DoT connections on port 853,
+    forwards DNS queries to our dnsmasq on port 53.
+
+    This makes Private DNS (dns.adguard.com:853) work on phones:
+    1. Phone connects to port 853 (TLS)
+    2. We do the TLS handshake with self-signed cert
+    3. We read the DNS query from the TLS stream
+    4. We forward it as plain DNS to dnsmasq on port 53
+    5. We send the DNS response back through TLS
+    
+    In opportunistic mode, Android accepts self-signed certs.
+    In strict mode, the cert is rejected but the phone may
+    fall back to plain DNS which goes through our dnsmasq.
+    """
+
+    def __init__(self, listen_port=853, dns_port=53, dns_host=AP_IP):
+        self.listen_port = listen_port
+        self.dns_port = dns_port
+        self.dns_host = dns_host
+        self.server = None
+        self.thread = None
+        self.running = False
+
+    def start(self):
+        """Start the DoT proxy in a background thread."""
+        if not generate_dot_cert():
+            RealtimeLogger.warn("DoT proxy: SSL cert generation failed — skipping")
+            return False
+
+        try:
+            # Create raw socket server
+            self.server = socketserver.TCPServer(("0.0.0.0", self.listen_port),
+                                                  _DotProxyHandler)
+            self.server.allow_reuse_address = True
+            _DotProxyHandler.dns_host = self.dns_host
+            _DotProxyHandler.dns_port = self.dns_port
+
+            # Wrap with SSL
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ctx.load_cert_chain(DOT_CERT, DOT_KEY)
+            self.server.socket = ctx.wrap_socket(self.server.socket, server_side=True)
+
+            self.running = True
+            self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+            self.thread.start()
+            RealtimeLogger.ok(f"DoT proxy running on port {self.listen_port} (forwarding to {self.dns_host}:{self.dns_port})")
+            return True
+        except Exception as e:
+            RealtimeLogger.warn(f"DoT proxy failed: {e}")
+            return False
+
+    def stop(self):
+        self.running = False
+        if self.server:
+            self.server.shutdown()
+
+
+class _DotProxyHandler(socketserver.BaseRequestHandler):
+    """Handler for individual DoT connections."""
+    dns_host = AP_IP
+    dns_port = 53
+
+    def handle(self):
+        """Handle a single DoT connection: read DNS query, forward, respond."""
+        try:
+            data = self.request.recv(4096)
+            if len(data) < 2:
+                return
+
+            # DNS wire format: first 2 bytes = length prefix (in DoT)
+            # But raw DNS from the TLS stream may or may not have the 2-byte length prefix
+            # If it has a 2-byte prefix, strip it
+            if len(data) > 2:
+                # Check if first 2 bytes look like a DNS length prefix
+                dns_len = (data[0] << 8) | data[1]
+                if dns_len == len(data) - 2:
+                    data = data[2:]  # Strip length prefix
+                elif dns_len == len(data):
+                    pass  # No prefix, use as-is
+
+            # Forward DNS query to dnsmasq via UDP
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.settimeout(3)
+            sock.sendto(data, (self.dns_host, self.dns_port))
+            response, _ = sock.recvfrom(4096)
+            sock.close()
+
+            # Send response back with DoT length prefix
+            self.request.sendall(len(response).to_bytes(2, 'big') + response)
+        except Exception:
+            pass
 
 
 # ──────────────────────────────────────────────────────────────
@@ -850,43 +988,15 @@ def setup_captive_portal_firewall(ap_interface: str):
         # ── DHCP ─────────────────────────────────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "67:68", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # ── CRITICAL: DNAT ALL DNS to our dnsmasq ────────────
-        # This is the KEY fix: when Private DNS (port 853) is enabled,
-        # the phone tries dns.adguard.com:853 (DoT).
-        # We redirect ALL port 853 traffic → our dnsmasq on port 53.
-        # dnsmasq responds with plain DNS → phone gets the answer.
-        # Even though TLS handshake fails, Android falls back to plain DNS
-        # using the response we sent.
-        subprocess.run([
-            "iptables", "-t", "nat", "-A", "PREROUTING",
-            "-i", ap_interface, "-p", "udp", "--dport", "53",
-            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
-        ], capture_output=True, timeout=5)
-        subprocess.run([
-            "iptables", "-t", "nat", "-A", "PREROUTING",
-            "-i", ap_interface, "-p", "tcp", "--dport", "53",
-            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
-        ], capture_output=True, timeout=5)
-        # Private DNS (DoT) port 853 → redirect to our dnsmasq port 53
-        subprocess.run([
-            "iptables", "-t", "nat", "-A", "PREROUTING",
-            "-i", ap_interface, "-p", "tcp", "--dport", "853",
-            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
-        ], capture_output=True, timeout=5)
-        subprocess.run([
-            "iptables", "-t", "nat", "-A", "PREROUTING",
-            "-i", ap_interface, "-p", "udp", "--dport", "853",
-            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
-        ], capture_output=True, timeout=5)
-        # DoH (DNS over HTTPS) port 443 → redirect to our portal
-        # (HTTPS server on 443 handles it with self-signed cert)
-
-        # ── Allow HTTP + HTTPS to our portal server ───────────
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
-        # Allow DNS (after DNAT, packets arrive at port 53 on our IP)
+        # ── Allow DNS (plain) to our dnsmasq ─────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        # Allow Private DNS (DoT) port 853 → our DoT proxy
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "ACCEPT"], capture_output=True, timeout=5)
+
+        # Allow HTTP + HTTPS to our portal server
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
         # ── Block ALL forwarding (internet) ───────────────────
         subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
