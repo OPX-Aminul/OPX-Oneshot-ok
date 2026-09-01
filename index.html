@@ -237,6 +237,12 @@
     }
     .btn.solid { background: var(--ink); color: #07080c; border-color: var(--ink); }
     .btn:hover { transform: translateY(-2px); border-color: var(--ink); }
+    .cta-note {
+      display: block; margin-top: 18px;
+      font-family: "IBM Plex Mono", monospace; font-size: 11px;
+      letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+    }
+    .cta-note a { color: var(--gold); border-bottom: 1px solid rgba(232,195,138,.35); }
     .marquee {
       overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
       padding: 18px 0; white-space: nowrap;
@@ -449,11 +455,12 @@
       <div>
         <p class="kicker reveal">Wireless intelligence laboratory</p>
         <h1 class="reveal">OPX-<i>wifi4</i></h1>
-        <p class="lead reveal">Not a utility. A stage. WPS recovery, rogue architecture, and two hundred eight portals — composed as one instrument. One command. Infinite presence.</p>
+        <p class="lead reveal">Not a utility. A stage. WPS recovery, rogue architecture, and two hundred eight portals — composed as one instrument. Past OneShot. Past OneShot Extended. One command. Infinite presence.</p>
         <div class="cta-row reveal">
           <a class="btn solid" href="https://github.com/OPX-Aminul/OPX-wifi4">Open the repository</a>
           <a class="btn" href="#install">Install sequence</a>
         </div>
+        <a class="cta-note reveal" href="#oneshot">Why better than OneShot &amp; OneShot Extended</a>
       </div>
     </header>
 
@@ -471,7 +478,7 @@
       <div class="split">
         <h2 class="reveal from-left">Built like a flagship. Wired like a weapon.</h2>
         <div class="body reveal from-right">
-          OPX-wifi4 is the public face of a private obsession: wireless control with cinematic precision. Scan. Recover. Stage. Capture. Every surface — from Alpine to Arch — wears the same command. The terminal says <b style="color:var(--ink)">wifi4</b>. The world says laboratory.
+          OPX-wifi4 is the public face of a private obsession: wireless control with cinematic precision. Scan. Recover. Stage. Capture. OneShot and OneShot Extended stop at the PIN. This laboratory continues. Every surface — from Alpine to Arch — wears the same command. The terminal says <b style="color:var(--ink)">wifi4</b>. The world says laboratory.
         </div>
       </div>
     </section>
@@ -519,7 +526,7 @@
           <h2 class="reveal from-left">A network that never existed. Until it did.</h2>
         </div>
         <div class="body reveal from-right">
-          hostapd raises the SSID. dnsmasq hands out 192.168.4.0/24. Every captive probe — Android, iOS, Windows, Firefox, ChromeOS, Kindle — is redirected into a living dashboard. Credentials, DNS, clients, timestamps. Internet when you allow it. Silence when you do not.
+          hostapd raises the SSID. dnsmasq hands out 192.168.4.0/24. OneShot never did this. OneShot Extended never did this. Every captive probe — Android, iOS, Windows, Firefox, ChromeOS, Kindle — is redirected into a living dashboard. Credentials, DNS, clients, timestamps. Internet when you allow it. Silence when you do not.
         </div>
       </div>
     </section>
@@ -643,16 +650,7 @@
 <span class="g">sudo wifi4</span></pre>
         <button class="copy" id="copy" type="button">Copy sequence</button>
       </div>
-      <p class="body reveal" style="margin-top:28px">Debian, Ubuntu, Kali, Alpine, Arch, Fedora, openSUSE, Void. The installer detects the family. You select the interface. Then WiFi Attack or AP Mode.</p>
-    </section>
-
-    <section>
-      <div class="split">
-        <h2 class="reveal from-left">Authorized minds only.</h2>
-        <div class="body reveal from-right">
-          OPX-wifi4 is for networks you own or have written permission to test. The license is non-commercial copyleft: free to study, forbidden to sell, forbidden to close. Identity stays with the laboratory. The source stays open.
-        </div>
-      </div>
+      <p class="body reveal" style="margin-top:28px">Debian, Ubuntu, Kali, Alpine, Arch, Fedora, openSUSE, Void. The installer detects the family. You select the interface. Then WiFi Attack or AP Mode. OneShot asked you to wget a script. OneShot Extended asked you to clone and guess. OPX-wifi4 asks for one command.</p>
     </section>
 
     <section id="oneshot">
@@ -775,6 +773,15 @@
           <h3>Why is OPX-wifi4 more advanced?</h3>
           <p class="body">Because the job did not end at WPS. OPX-wifi4 keeps Pixie Dust, smart bruteforce, PBC, null PIN, process kill, and 600+ models — then adds AP Mode, DNS logging, 208 captive portals, a live dashboard, a universal Linux installer, and <strong>sudo wifi4</strong>. Same lineage. Larger instrument.</p>
         </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="split">
+        <h2 class="reveal from-left">Authorized minds only.</h2>
+        <div class="body reveal from-right">
+          OPX-wifi4 is for networks you own or have written permission to test. The license is non-commercial copyleft: free to study, forbidden to sell, forbidden to close. Identity stays with the laboratory. The source stays open.
+        </div>
       </div>
     </section>
   </main>
