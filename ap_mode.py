@@ -1014,10 +1014,12 @@ def setup_internet_forwarding(ap_interface: str, internet_interface: str = None)
 def setup_captive_portal_firewall(ap_interface: str):
     """Block ALL outbound traffic from AP clients EXCEPT DNS/HTTP to our portal.
 
-    This forces captive portal detection to work correctly:
-    - DNAT ALL DNS (port 53 + 853) → our dnsmasq — even Private DNS goes through us
-    - Blocks all internet traffic so phones stay in captive portal mode
-    - Only allows DHCP, DNS (to us), and HTTP/HTTPS (to us)
+    Key strategy (based on research):
+    1. REJECT port 853 (Private DNS) → instant failure → phone falls back to plain DNS
+    2. DNAT ALL port 53 traffic → our dnsmasq (catches fallback DNS to ANY server)
+    3. Phone's Private DNS tries external IP:853 → fails (no internet)
+    4. Phone falls back to plain DNS on port 53 → DNAT catches it → our dnsmasq
+    5. Our dnsmasq resolves everything to 192.168.4.1 → captive portal works!
     """
     RealtimeLogger.step("Setting up captive portal firewall (blocking outbound)...")
     try:
@@ -1028,11 +1030,30 @@ def setup_captive_portal_firewall(ap_interface: str):
         # ── DHCP ─────────────────────────────────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "67:68", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # ── Allow DNS (plain) to our dnsmasq ─────────────────
+        # ── CRITICAL: DNAT ALL port 53 to our dnsmasq ─────────
+        # When Private DNS fails, phone falls back to plain DNS
+        # but may try EXTERNAL servers (8.8.8.8, 1.1.1.1, etc.)
+        # This DNAT catches ALL port 53 traffic and redirects to us
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "udp", "--dport", "53",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "tcp", "--dport", "53",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+
+        # Allow DNS after DNAT (packets now destined for our IP:53)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
-        # Allow Private DNS (DoT) port 853 → our DoT proxy
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "ACCEPT"], capture_output=True, timeout=5)
+
+        # ── REJECT Private DNS (port 853) — instant failure ──
+        # Phone's Private DNS tries external IP:853 → instant TCP RST
+        # This forces immediate fallback to plain DNS (port 53)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REJECT", "--reject-with", "tcp-reset"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REJECT"], capture_output=True, timeout=5)
 
         # Allow HTTP + HTTPS to our portal server
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
@@ -1045,7 +1066,7 @@ def setup_captive_portal_firewall(ap_interface: str):
         # ── Block all other INPUT from AP ─────────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
 
-        RealtimeLogger.ok("Captive portal firewall active — ALL DNS (53+853) DNAT'd to our dnsmasq")
+        RealtimeLogger.ok("Captive portal firewall active — Private DNS REJECTED, ALL port 53 DNAT'd to our dnsmasq")
         return True
     except Exception as e:
         RealtimeLogger.warn(f"Firewall setup failed: {e}")
