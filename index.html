@@ -66,6 +66,48 @@
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       width: 100%; height: 100%;
     }
+    .aurora, .grid-floor {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .aurora span {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      mix-blend-mode: screen; opacity: .42;
+      animation: drift 18s ease-in-out infinite;
+    }
+    .aurora span:nth-child(1) {
+      width: 55vw; height: 55vw; left: -12vw; top: -10vh;
+      background: radial-gradient(circle, rgba(126,232,255,.55), transparent 70%);
+    }
+    .aurora span:nth-child(2) {
+      width: 48vw; height: 48vw; right: -14vw; top: 18vh;
+      background: radial-gradient(circle, rgba(232,195,138,.4), transparent 70%);
+      animation-delay: -6s;
+    }
+    .aurora span:nth-child(3) {
+      width: 42vw; height: 42vw; left: 28vw; bottom: -16vh;
+      background: radial-gradient(circle, rgba(110,90,255,.35), transparent 70%);
+      animation-delay: -12s;
+    }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      40% { transform: translate(6vw, 4vh) scale(1.12); }
+      70% { transform: translate(-4vw, -3vh) scale(.92); }
+    }
+    .grid-floor {
+      background-image:
+        linear-gradient(rgba(126,232,255,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126,232,255,.07) 1px, transparent 1px);
+      background-size: 56px 56px;
+      transform: perspective(700px) rotateX(62deg) translateY(42%) scale(2.2);
+      transform-origin: center bottom;
+      mask-image: linear-gradient(to top, rgba(0,0,0,.55), transparent 70%);
+      -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,.55), transparent 70%);
+      animation: gridshift 22s linear infinite;
+    }
+    @keyframes gridshift {
+      from { background-position: 0 0; }
+      to { background-position: 0 56px; }
+    }
     .grain, .vignette {
       position: fixed; inset: 0; pointer-events: none; z-index: 8;
     }
@@ -315,6 +357,7 @@
         animation: none !important; transition: none !important; scroll-behavior: auto !important;
       }
       .reveal { opacity: 1; transform: none; }
+      .aurora span, .grid-floor { animation: none !important; }
     }
   </style>
 </head>
@@ -324,6 +367,8 @@
   <div class="letterbox bot"></div>
   <div class="cursor" id="cursor"></div>
   <canvas id="fx"></canvas>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="grid-floor" aria-hidden="true"></div>
   <div class="grain"></div>
   <div class="vignette"></div>
   <div class="scan"></div>
@@ -635,29 +680,56 @@
 
       const canvas = document.getElementById("fx");
       const ctx = canvas.getContext("2d");
-      let w, h, dots, raf;
+      let w, h, dots, raf, mx = 0, my = 0;
+      window.addEventListener("pointermove", function (e) {
+        mx = e.clientX * Math.min(devicePixelRatio, 2);
+        my = e.clientY * Math.min(devicePixelRatio, 2);
+      }, { passive: true });
       const resize = function () {
         w = canvas.width = window.innerWidth * Math.min(devicePixelRatio, 2);
         h = canvas.height = window.innerHeight * Math.min(devicePixelRatio, 2);
         canvas.style.width = window.innerWidth + "px";
         canvas.style.height = window.innerHeight + "px";
-        const n = window.innerWidth < 700 ? 36 : 78;
+        const n = window.innerWidth < 700 ? 48 : 96;
         dots = Array.from({ length: n }, function () {
           return {
             x: Math.random() * w,
             y: Math.random() * h,
-            v: 0.15 + Math.random() * 0.45,
-            r: 0.6 + Math.random() * 1.8
+            v: 0.18 + Math.random() * 0.55,
+            r: 0.7 + Math.random() * 2.1
           };
         });
       };
       const draw = function (t) {
         ctx.clearRect(0, 0, w, h);
-        const max = w < 900 ? 90 : 140;
+        const cx = w * 0.5;
+        const cy = h * 0.42;
+        const pulse = (Math.sin(t / 900) + 1) * 0.5;
+        ctx.globalAlpha = 1;
+        for (let i = 1; i <= 5; i++) {
+          const rad = (80 + i * 70 + (t / 18) % 70) * (w / Math.max(window.innerWidth, 1));
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(126,232,255," + (0.045 + pulse * 0.03) + ")";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        const sweep = (t / 1400) % (Math.PI * 2);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, Math.min(w, h) * 0.38, sweep, sweep + 0.55);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(126,232,255," + (0.04 + pulse * 0.03) + ")";
+        ctx.fill();
+        const max = w < 900 ? 110 : 160;
         for (let i = 0; i < dots.length; i++) {
           const a = dots[i];
           a.y -= a.v;
-          a.x += Math.sin((t + i * 40) / 1800) * 0.18;
+          a.x += Math.sin((t + i * 40) / 1600) * 0.28;
+          if (mx) {
+            a.x += (mx - a.x) * 0.00035;
+            a.y += (my - a.y) * 0.00035;
+          }
           if (a.y < 0) a.y = h;
           if (a.x < 0) a.x = w;
           if (a.x > w) a.x = 0;
@@ -667,7 +739,7 @@
             const dy = a.y - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < max) {
-              ctx.strokeStyle = "rgba(126,232,255," + (0.16 * (1 - dist / max)) + ")";
+              ctx.strokeStyle = "rgba(126,232,255," + (0.2 * (1 - dist / max)) + ")";
               ctx.lineWidth = 1;
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
@@ -675,8 +747,8 @@
               ctx.stroke();
             }
           }
-          ctx.fillStyle = "rgba(232,195,138,0.75)";
-          ctx.globalAlpha = 0.22 + (Math.sin(t / 800 + i) + 1) * 0.12;
+          ctx.fillStyle = i % 5 === 0 ? "rgba(232,195,138,0.9)" : "rgba(126,232,255,0.85)";
+          ctx.globalAlpha = 0.28 + (Math.sin(t / 700 + i) + 1) * 0.16;
           ctx.beginPath();
           ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
           ctx.fill();
