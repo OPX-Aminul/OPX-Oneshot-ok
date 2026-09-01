@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>OPX-wifi4 — Wireless Intelligence Laboratory</title>
-  <meta name="description" content="OPX-wifi4 is a Linux wireless laboratory: Pixie Dust WPS recovery, smart PIN bruteforce, push-button connect, and AP Mode with 208 cinematic captive portals across 19 categories. One command: sudo wifi4.">
-  <meta name="keywords" content="OPX-wifi4, WPS, Pixie Dust, captive portal, rogue AP, hostapd, Linux pentest, wifi4, wireless security, authorized testing">
+  <title>OPX-wifi4 — Advanced OneShot Pin & OneShot Extended Alternative</title>
+  <meta name="description" content="OPX-wifi4 is the advanced successor to OneShot Pin and OneShot Extended: Pixie Dust, smart WPS bruteforce, PBC, plus AP Mode with 208 captive portals. Search OneShot Pin or OneShot Extended — this is the next laboratory. sudo wifi4.">
+  <meta name="keywords" content="OPX-wifi4, OneShot, OneShot Pin, OneShotPin, oneshot.py, kimocoder OneShot, OneShot Extended, OneShot-Extended, ose.py, chkndrp OneShot-Extended, drygdryg OneShot, pixiewps, WPS Pixie Dust, WPS bruteforce, captive portal, rogue AP, wifi4, Linux pentest">
   <meta name="author" content="OPX-Aminul">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#05070b">
@@ -34,7 +34,40 @@
     "description": "Linux WPS attack and AP Mode laboratory with 208 captive portal templates.",
     "author": { "@type": "Person", "name": "OPX-Aminul" },
     "license": "https://github.com/OPX-Aminul/OPX-wifi4/blob/main/LICENSE",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "alternateName": ["wifi4", "OPX wifi4", "OneShot Pin alternative", "OneShot Extended alternative"]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is OneShot Pin?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "OneShot, often searched as OneShot Pin, is the wpa_supplicant WPS tool from kimocoder/OneShot: Pixie Dust, online bruteforce, PIN generation, PBC, and an iw scanner. OPX-wifi4 is the advanced laboratory built on that lineage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is OneShot Extended?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "OneShot Extended (ose.py by chkndrp) forks OneShot with null PIN, process kill, WPS 1.0 highlighting, and Android support. OPX-wifi4 keeps those WPS modes and adds AP Mode, 208 captive portals, and sudo wifi4."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why use OPX-wifi4 instead of OneShot Pin or OneShot Extended?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "OPX-wifi4 includes Pixie Dust, smart bruteforce, PBC, null PIN, 600+ models, rogue AP Mode, DNS logging, 208 portals, a live dashboard, and a universal Linux installer."
+        }
+      }
+    ]
   }
   </script>
   <style>
@@ -345,6 +378,25 @@
       transition: width .25s, height .25s;
     }
     .cursor.big { width: 56px; height: 56px; }
+    .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 40px; }
+    .compare {
+      width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px;
+    }
+    .compare th, .compare td {
+      border-bottom: 1px solid var(--line); padding: 16px 14px; text-align: left; vertical-align: top;
+    }
+    .compare th {
+      font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--gold); font-weight: 500;
+    }
+    .compare td.yes { color: var(--cyan); }
+    .compare td.no { color: #5c6570; }
+    .compare td.win { color: var(--ink); font-weight: 500; }
+    .faq { margin-top: 56px; display: grid; gap: 22px; }
+    .faq article {
+      border-top: 1px solid var(--line); padding-top: 22px;
+    }
+    .faq h3 { font-size: 20px; margin-bottom: 10px; font-weight: 500; }
     @media (max-width: 900px) {
       .nav-links { display: none; }
       .split, .modes, .stats { grid-template-columns: 1fr; }
@@ -388,6 +440,7 @@
       <a href="#modes">Modes</a>
       <a href="#portals">Portals</a>
       <a href="#install">Install</a>
+      <a href="#oneshot">vs OneShot</a>
     </div>
   </nav>
 
@@ -599,6 +652,129 @@
         <div class="body reveal from-right">
           OPX-wifi4 is for networks you own or have written permission to test. The license is non-commercial copyleft: free to study, forbidden to sell, forbidden to close. Identity stays with the laboratory. The source stays open.
         </div>
+      </div>
+    </section>
+
+    <section id="oneshot">
+      <p class="kicker reveal">Compared from source</p>
+      <h2 class="reveal" style="margin-bottom:24px">Beyond OneShot.<br>Beyond OneShot Extended.</h2>
+      <p class="body reveal" style="max-width:760px">
+        Searched <strong>OneShot</strong>, <strong>OneShot Pin</strong>, <strong>oneshot.py</strong>, or <strong>OneShot Extended</strong>? This page is for you.
+        We cloned <a href="https://github.com/kimocoder/OneShot">kimocoder/OneShot</a> and
+        <a href="https://github.com/chkndrp/OneShot-Extended">chkndrp/OneShot-Extended</a>,
+        then compared them file-by-file with OPX-wifi4. Both are WPS clients. Only OPX-wifi4 is a full laboratory.
+      </p>
+      <div class="compare-wrap reveal">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>OneShot</th>
+              <th>OneShot Extended</th>
+              <th>OPX-wifi4</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Repository</td>
+              <td><a href="https://github.com/kimocoder/OneShot">kimocoder/OneShot</a></td>
+              <td><a href="https://github.com/chkndrp/OneShot-Extended">chkndrp/OneShot-Extended</a></td>
+              <td class="win"><a href="https://github.com/OPX-Aminul/OPX-wifi4">OPX-Aminul/OPX-wifi4</a></td>
+            </tr>
+            <tr>
+              <td>Entry file</td>
+              <td>oneshot.py (1331 lines)</td>
+              <td>ose.py + src modules</td>
+              <td class="win">oneshot.py + ap_mode.py</td>
+            </tr>
+            <tr>
+              <td>Pixie Dust</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Online WPS bruteforce</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Smart two-phase</td>
+            </tr>
+            <tr>
+              <td>3WiFi / PIN algorithms</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Expanded vendor set</td>
+            </tr>
+            <tr>
+              <td>Push-button (PBC)</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+            </tr>
+            <tr>
+              <td>Null PIN</td>
+              <td class="no">No</td>
+              <td class="yes">Yes (-N)</td>
+              <td class="yes">Yes (-N)</td>
+            </tr>
+            <tr>
+              <td>iw scanner</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes + WPS 1.0 highlight</td>
+              <td class="yes">Yes + WPS 1.0 highlight</td>
+            </tr>
+            <tr>
+              <td>Kill interfering processes</td>
+              <td class="no">No</td>
+              <td class="yes">Yes (-k / --restore)</td>
+              <td class="yes">Yes (-k / --restore)</td>
+            </tr>
+            <tr>
+              <td>Vulnerable device DB</td>
+              <td>164 models</td>
+              <td>612 models</td>
+              <td class="win">600+ models</td>
+            </tr>
+            <tr>
+              <td>AP Mode / captive portal</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+              <td class="win">208 templates, 19 categories</td>
+            </tr>
+            <tr>
+              <td>Live capture dashboard</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+              <td class="win">Clients, DNS, credentials</td>
+            </tr>
+            <tr>
+              <td>Universal installer</td>
+              <td class="no">Manual per distro</td>
+              <td class="no">Manual packages</td>
+              <td class="win">install.sh, Debian to Alpine</td>
+            </tr>
+            <tr>
+              <td>Launch command</td>
+              <td>python3 oneshot.py</td>
+              <td>python ose.py</td>
+              <td class="win">sudo wifi4</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="faq">
+        <article class="reveal">
+          <h3>What is OneShot / OneShot Pin?</h3>
+          <p class="body">OneShot (often searched as OneShot Pin) is the wpa_supplicant WPS tool from the <a href="https://github.com/kimocoder/OneShot">kimocoder/OneShot</a> line: Pixie Dust, online bruteforce, 3WiFi PIN generation, PBC, and an iw scanner — no monitor mode. It is still only a WPS client. No rogue AP. No portals. No <strong>wifi4</strong> command.</p>
+        </article>
+        <article class="reveal">
+          <h3>What is OneShot Extended?</h3>
+          <p class="body"><a href="https://github.com/chkndrp/OneShot-Extended">OneShot Extended</a> (ose.py) forks OneShot and adds null PIN, process kill/restore, WPS 1.0 highlighting, stronger Android/MediaTek handling, and a larger vulnwsc list. It remains a WPS client. It cannot raise hostapd, serve 208 portals, or install itself with one script.</p>
+        </article>
+        <article class="reveal">
+          <h3>Why is OPX-wifi4 more advanced?</h3>
+          <p class="body">Because the job did not end at WPS. OPX-wifi4 keeps Pixie Dust, smart bruteforce, PBC, null PIN, process kill, and 600+ models — then adds AP Mode, DNS logging, 208 captive portals, a live dashboard, a universal Linux installer, and <strong>sudo wifi4</strong>. Same lineage. Larger instrument.</p>
+        </article>
       </div>
     </section>
   </main>
