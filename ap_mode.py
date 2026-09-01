@@ -712,24 +712,45 @@ DOT_KEY = "/tmp/wifi4_dot.key"
 
 
 def generate_dot_cert(hostname: str = "dns.adguard.com") -> bool:
-    """Generate self-signed SSL cert for DoT proxy."""
+    """Generate self-signed SSL cert for DoT proxy with SAN."""
     if os.path.exists(DOT_CERT) and os.path.exists(DOT_KEY):
         return True
+    # Generate cert with SAN (Subject Alternative Name)
+    # Android requires SAN to match the hostname
     try:
+        # Create config file with SAN
+        cfg = "/tmp/wifi4_dot.cnf"
+        with open(cfg, "w") as f:
+            f.write(f"""[req]
+distinguished_name = req_dn
+x509_extensions = v3_req
+prompt = no
+
+[req_dn]
+CN = {hostname}
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = {hostname}
+DNS.2 = dns.google
+DNS.3 = one.one.one.one
+IP.1 = {AP_IP}
+""")
         subprocess.run([
             "openssl", "req", "-x509", "-newkey", "rsa:2048",
             "-keyout", DOT_KEY, "-out", DOT_CERT,
             "-days", "365", "-nodes",
-            "/CN", f"{hostname}"
+            "-config", cfg
         ], capture_output=True, timeout=10)
         if os.path.exists(DOT_CERT) and os.path.exists(DOT_KEY):
             return True
     except Exception:
         pass
-    # Fallback: generate using Python ssl module
+    # Fallback: simple cert without SAN
     try:
-        from subprocess import run as _run
-        _run([
+        subprocess.run([
             "openssl", "req", "-x509", "-newkey", "rsa:2048",
             "-keyout", DOT_KEY, "-out", DOT_CERT,
             "-days", "365", "-nodes",
@@ -806,21 +827,39 @@ class _DotProxyHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         """Handle a single DoT connection: read DNS query, forward, respond."""
+        client_ip = self.client_address[0] if hasattr(self, 'client_address') else '?'
         try:
+            RealtimeLogger.info(f"DoT connection from {client_ip}")
             data = self.request.recv(4096)
             if len(data) < 2:
+                RealtimeLogger.info(f"DoT: empty/short data from {client_ip}")
                 return
 
             # DNS wire format: first 2 bytes = length prefix (in DoT)
-            # But raw DNS from the TLS stream may or may not have the 2-byte length prefix
-            # If it has a 2-byte prefix, strip it
             if len(data) > 2:
-                # Check if first 2 bytes look like a DNS length prefix
                 dns_len = (data[0] << 8) | data[1]
                 if dns_len == len(data) - 2:
                     data = data[2:]  # Strip length prefix
                 elif dns_len == len(data):
                     pass  # No prefix, use as-is
+
+            # Extract query name for logging
+            qname = "?"
+            try:
+                if len(data) > 12:
+                    pos = 12
+                    parts = []
+                    while pos < len(data) and data[pos] != 0:
+                        length = data[pos]
+                        pos += 1
+                        if pos + length <= len(data):
+                            parts.append(data[pos:pos+length].decode('ascii', errors='replace'))
+                            pos += length
+                    qname = ".".join(parts)
+            except Exception:
+                pass
+
+            RealtimeLogger.info(f"DoT query from {client_ip}: {qname}")
 
             # Forward DNS query to dnsmasq via UDP
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -831,8 +870,9 @@ class _DotProxyHandler(socketserver.BaseRequestHandler):
 
             # Send response back with DoT length prefix
             self.request.sendall(len(response).to_bytes(2, 'big') + response)
-        except Exception:
-            pass
+            RealtimeLogger.info(f"DoT response sent to {client_ip} ({len(response)} bytes)")
+        except Exception as e:
+            RealtimeLogger.info(f"DoT error from {client_ip}: {e}")
 
 
 # ──────────────────────────────────────────────────────────────
