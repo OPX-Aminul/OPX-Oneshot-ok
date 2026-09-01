@@ -927,22 +927,60 @@ class Companion:
         cmd = self.pixie_creds.get_pixie_cmd(full_range)
         if showcmd:
             RealtimeLogger.cmd(' '.join(cmd))
+
+        start = time.time()
+        stop_evt = threading.Event()
+        spinner = ['|', '/', '-', '\\']
+        slot = {'idx': 0, 'line': ''}
+
+        def spinner_loop():
+            while not stop_evt.is_set():
+                slot['idx'] = (slot['idx'] + 1) % len(spinner)
+                elapsed = int(time.time() - start)
+                sys.stdout.write('\r  \033[90m[*] Pixiewps is working… %s %02d:%02d\033[0m'
+                                 % (spinner[slot['idx']], elapsed // 60, elapsed % 60))
+                sys.stdout.flush()
+                stop_evt.wait(0.2)
+            sys.stdout.write('\r' + ' ' * 60 + '\r')
+            sys.stdout.flush()
+
         try:
-            r = subprocess.run(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT, encoding='utf-8')
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8',
+                                    bufsize=1)
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             RealtimeLogger.err(f'Pixiewps error: {e}')
             return False
-        print(r.stdout)
-        if r.returncode == 0:
-            for line in r.stdout.splitlines():
-                if ('[+]' in line) and ('WPS pin' in line):
+
+        t = threading.Thread(target=spinner_loop, daemon=True)
+        t.start()
+
+        out_lines = []
+        for line in proc.stdout:
+            out_lines.append(line)
+            if stop_evt.is_set():
+                break
+
+        stop_evt.set()
+        t.join()
+        proc.wait()
+
+        output = ''.join(out_lines)
+        print(output)
+        # Sanity indicator: if output is empty/zero length, tell the user it ran.
+        if not output.strip():
+            RealtimeLogger.warn('Pixiewps produced no output (check installation)')
+        elapsed = int(time.time() - start)
+        RealtimeLogger.ok(f'Pixiewps finished in {elapsed//60}m {elapsed%60}s')
+        if proc.returncode == 0:
+            for line in output.splitlines():
+                if ('[+]' in line) and ('WPS pin found' in line):
                     pin = line.split(':')[-1].strip()
                     if pin == '<empty>':
                         pin = "''"
                     RealtimeLogger.ok(f'Pixiewps recovered PIN: {pin}')
                     return pin
-            RealtimeLogger.warn('Pixiewps ran but could not find PIN in output')
+            RealtimeLogger.err('Pixiewps could not recover the PIN — the router may not be Pixie Dust vulnerable')
         else:
             RealtimeLogger.err('Pixiewps failed')
         return False
@@ -1357,16 +1395,10 @@ class WiFiScanner:
 
         def handle_wps2(line, result, networks):
             networks[-1]['WPS'] = True
-            ver2 = result.group(1).strip()
-            if ver2:
-                # Prefer the higher WPS capability version when both are reported.
-                try:
-                    cur = float(networks[-1].get('WPS version', '1.0'))
-                    new = float(ver2)
-                except ValueError:
-                    cur, new = 1.0, 2.0
-                if new > cur:
-                    networks[-1]['WPS version'] = ver2
+            # 'Version2: 2.0' is only the WPS-2.0 *capability* flag. The primary
+            # protocol version (reported as "Version: 1.0") must stay untouched so
+            # WPS-1.0 vulnerability marking and the device list still work.
+            networks[-1]['WPS 2.0 capability'] = True
 
         def handle_wpsLocked(line, result, networks):
             flag = int(result.group(1), 16)
@@ -1533,11 +1565,34 @@ class WiFiScanner:
             }
             return icons.get(sec_type, '\U0001f512 ' + sec_type)
 
+        def matches_vuln(key):
+            """Match a device model/name against the vulnerable list.
+
+            The list is noisy (ex. "Tenda 123456" vs scanned
+            "Tenda Wireless AP Ecos"), so we first try exact/contained
+            substring, then fall back to the leading vendor token.
+            """
+            if not key:
+                return False
+            key_l = key.lower()
+            for entry in self.vuln_list:
+                e = entry.strip().lower()
+                if not e:
+                    continue
+                if e in key_l or key_l in e:
+                    return True
+                ek = e.split()
+                kk = key_l.split()
+                if ek and kk and ek[0] == kk[0] and len(ek[0]) >= 3:
+                    return True
+            return False
+
         def card_color(network):
             model = '{} {}'.format(network['Model'], network['Model number']).strip()
+            device = network.get('Device name', '').strip()
             if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
                 return '\033[93m', 'ATTACKED'
-            elif self.vuln_list and model and model in self.vuln_list:
+            elif self.vuln_list and (matches_vuln(model) or matches_vuln(device)):
                 return '\033[92m', 'VULNERABLE'
             elif network['WPS version'] == '1.0':
                 return '\033[92m', 'WPS-1.0'
