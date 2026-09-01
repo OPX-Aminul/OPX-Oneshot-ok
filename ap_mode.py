@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-WiFi4 AP Mode — Evil Twin / Captive Portal / DNS Logger
+OPX-wifi4 AP Mode — Evil Twin / Captive Portal / DNS Logger
 =======================================================
 Creates a rogue Access Point with optional captive portal and DNS logging.
 Requires: hostapd, dnsmasq, and optionally iptables for internet forwarding.
@@ -268,7 +268,7 @@ def check_ap_dependencies() -> dict:
 # ──────────────────────────────────────────────────────────────
 def generate_hostapd_conf(interface: str, ssid: str, channel: str = "6") -> str:
     """Generate hostapd configuration file."""
-    conf = f"""# WiFi4 AP Mode — hostapd config
+    conf = f"""# OPX-wifi4 AP Mode — hostapd config
 interface={interface}
 driver=nl80211
 ssid={ssid}
@@ -294,7 +294,7 @@ wpa=0
 
 def generate_dnsmasq_conf(interface: str, dns_only: bool = False) -> str:
     """Generate dnsmasq configuration for DHCP + DNS."""
-    conf = f"""# WiFi4 AP Mode — dnsmasq config
+    conf = f"""# OPX-wifi4 AP Mode — dnsmasq config
 interface={interface}
 bind-interfaces
 no-resolv
@@ -1150,7 +1150,7 @@ class APManager:
         AP_INTERFACE = self.interface
 
         RealtimeLogger.separator()
-        RealtimeLogger.banner("WiFi4 AP MODE")
+        RealtimeLogger.banner("OPX-wifi4 AP MODE")
         RealtimeLogger.separator()
 
         # Check dependencies
@@ -1403,7 +1403,7 @@ def launch_ap_mode(interface: str):
       7. Start AP
     """
     RealtimeLogger.separator()
-    RealtimeLogger.banner("WiFi4 AP MODE SETUP")
+    RealtimeLogger.banner("OPX-wifi4 AP MODE SETUP")
     RealtimeLogger.separator()
 
     # ── Step 1: Check AP support ──
@@ -1446,7 +1446,7 @@ def launch_ap_mode(interface: str):
     if not dns_only:
         print()
         RealtimeLogger.info("Captive Portal HTML selection:")
-        print("  \033[1;33m1)\033[0m Use default WiFi4 captive portal")
+        print("  \033[1;33m1)\033[0m Use default OPX-wifi4 captive portal")
         print("  \033[1;33m2)\033[0m Browse template catalog (\033[1;32m154 templates\033[0m)")
         print("  \033[1;33m3)\033[0m Use HTML file from current directory")
         print("  \033[1;33m4)\033[0m Specify custom HTML file path")
@@ -1718,7 +1718,7 @@ def _load_template(name: str) -> str:
     except FileNotFoundError:
         RealtimeLogger.warn(f"Template {name} not found at {path}")
         # Return a minimal fallback
-        return f"<html><body><h1>WiFi4 AP Mode</h1><p>{name}</p></body></html>"
+        return f"<html><body><h1>OPX-wifi4 AP Mode</h1><p>{name}</p></body></html>"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1728,7 +1728,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="WiFi4 AP Mode — Evil Twin / Captive Portal"
+        description="OPX-wifi4 AP Mode — Evil Twin / Captive Portal"
     )
     parser.add_argument("-i", "--interface", required=True,
                         help="WiFi interface to use as AP")

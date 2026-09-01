@@ -1,6 +1,6 @@
 #!/bin/bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  OneShot — Universal Linux Installer                        ║
+# ║  OPX-wifi4 — Universal Linux Installer                      ║
 # ║  Works on Debian/Ubuntu, Arch, Fedora, Alpine, and more     ║
 # ║  Run as root: sudo bash install.sh                          ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -220,7 +220,7 @@ create_wifi4() {
     cat > "${INSTALL_DIR}/${COMMAND_NAME}" << 'WIFI4_EOF'
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  wifi4 — OneShot WPS Attack Tool Launcher
+#  wifi4 — OPX-wifi4 Launcher
 #  Auto-detects WiFi interfaces, prompts user, runs with -k
 #  Use -u / --update to update from GitHub
 # ═══════════════════════════════════════════════════════════════
@@ -249,7 +249,7 @@ done
 if [ "$UPDATE_MODE" -eq 1 ]; then
     echo ""
     echo -e "\033[1;36m╔══════════════════════════════════════════════════╗\033[0m"
-    echo -e "\033[1;36m║\033[0m  \033[1;97mWiFi4 Full Updater\033[0m                            \033[1;36m║\033[0m"
+    echo -e "\033[1;36m║\033[0m  \033[1;97mOPX-wifi4 Full Updater\033[0m                        \033[1;36m║\033[0m"
     echo -e "\033[1;36m╚══════════════════════════════════════════════════╝\033[0m"
     echo ""
 
@@ -541,7 +541,7 @@ WIFI4_EOF
 main() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════╗${RESET}"
-    echo -e "${CYAN}║  OneShot — Universal Linux Installer             ║${RESET}"
+    echo -e "${CYAN}║  OPX-wifi4 — Universal Linux Installer           ║${RESET}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════╝${RESET}"
     echo ""
 

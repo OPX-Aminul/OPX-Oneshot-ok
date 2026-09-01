@@ -1,0 +1,108 @@
+OPX-wifi4 Non-Commercial Copyleft License
+Version 1.0
+
+Copyright (c) 2026 OPX-Aminul
+Project: OPX-wifi4
+Repository: https://github.com/OPX-Aminul/OPX-wifi4
+
+This license applies to all source code, scripts, documentation, templates,
+and other files in this repository (the "Software"), unless a file states
+otherwise.
+
+--------------------------------------------------
+1. GRANT OF RIGHTS (NON-COMMERCIAL ONLY)
+--------------------------------------------------
+
+You may do the following, free of charge, solely for non-commercial purposes:
+
+  a. Use the Software.
+  b. Copy the Software.
+  c. Study and modify the Software.
+  d. Distribute the Software and modifications, provided you comply with
+     every condition in this license.
+
+"Non-commercial" means no money, fees, subscriptions, donations-in-exchange
+for access, paid hosting, paid support bundles, SaaS, consulting packages,
+or any other commercial advantage is charged or obtained for the Software
+or a derivative of it.
+
+--------------------------------------------------
+2. COPYLEFT — SOURCE MUST STAY OPEN
+--------------------------------------------------
+
+  a. Any modified version, fork, or derivative work MUST be licensed under
+     this same license, with no additional restrictions that weaken it.
+  b. You MUST publish the complete corresponding source of any distributed
+     derivative, in a form that a skilled person can build and run.
+  c. You may NOT relicense the Software or any derivative as proprietary,
+     closed source, or under a different license.
+  d. You may NOT distribute the Software only as binaries, obfuscated code,
+     compiled packages, or containers without the full source.
+
+--------------------------------------------------
+3. FORBIDDEN USES
+--------------------------------------------------
+
+You may NOT:
+
+  a. Sell the Software, or sell access to it.
+  b. Include the Software in a paid product, paid course, paid tool, or
+     paid service.
+  c. Offer the Software as a commercial feature of another product.
+  d. Use the Software to operate a paid or ad-supported hosted service
+     whose primary value is this Software.
+  e. Remove, hide, or replace this license file.
+  f. Claim that you are the original author of the Software.
+  g. Register trademarks, GitHub names, or domains that impersonate
+     "OPX-wifi4", "OPX-wifi4", or "wifi4" as if they were yours.
+  h. File copyright claims, DMCA notices, takedown requests, or similar
+     actions against the original repository, its owner, or genuine
+     non-commercial forks that comply with this license.
+  i. Use the Software for any purpose that is illegal where you use it.
+
+--------------------------------------------------
+4. ATTRIBUTION (PROJECT IDENTITY)
+--------------------------------------------------
+
+  a. Redistributions MUST keep this LICENSE file intact.
+  b. Redistributions MUST retain the project name "OPX-wifi4" in
+     documentation, or clearly state that the work is derived from
+     OPX-wifi4 (https://github.com/OPX-Aminul/OPX-wifi4).
+  c. You may NOT present a fork as the official OPX-wifi4 project.
+
+--------------------------------------------------
+5. NO WARRANTY
+--------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------
+6. TERMINATION
+--------------------------------------------------
+
+Any violation of this license automatically terminates your rights.
+Upon termination you must stop using, copying, and distributing the
+Software and all derivatives. Sections 3, 5, and 7 survive termination.
+
+--------------------------------------------------
+7. GOVERNING INTENT
+--------------------------------------------------
+
+This license is intentionally stricter than typical open-source licenses.
+The author's intent is:
+
+  - The Software remains free for personal, educational, and research use.
+  - Nobody may monetize it.
+  - Nobody may close the source.
+  - Nobody may steal the identity of the project or force the original
+    repository offline.
+
+If a court finds any clause unenforceable, the remaining clauses still apply.
+
+For permission beyond this license, contact the copyright holder.

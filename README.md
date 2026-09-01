@@ -1,6 +1,6 @@
-# 🔥 WiFi4 — Advanced WPS Attack & AP Mode Tool
+# OPX-wifi4 — Advanced WPS Attack & AP Mode Tool
 
-WiFi4 is a powerful WPS (Wi-Fi Protected Setup) penetration testing tool with a built-in **AP Mode** for captive portal attacks. Supports Pixie Dust attacks, online bruteforce, push-button connections, and **208 pre-built captive portal templates** across 19 categories. Works on **any Linux distribution** including Alpine, Debian, Ubuntu, Arch, Fedora, and more.
+OPX-wifi4 is a powerful WPS (Wi-Fi Protected Setup) penetration testing tool with a built-in **AP Mode** for captive portal attacks. Supports Pixie Dust attacks, online bruteforce, push-button connections, and **208 pre-built captive portal templates** across 19 categories. Works on **any Linux distribution** including Alpine, Debian, Ubuntu, Arch, Fedora, and more.
 
 ## ⚡ Features
 
@@ -189,9 +189,9 @@ python3 /opt/oneshot/ap_mode.py -i wlan0 --html /path/to/page.html --internet
 | ☁️ Cloud Services | 4 | AWS, Azure, Cloudflare, Google Cloud |
 | 🎬 Streaming | 3 | Disney+, HBO Max, Crunchyroll |
 
-### wifi4 Wrapper Options
+### OPX-wifi4 Wrapper Options
 
-The `wifi4` command handles these flags itself (before launching oneshot.py):
+The `wifi4` command (OPX-wifi4 launcher) handles these flags itself (before launching oneshot.py):
 
 ```
   -u, --update    Update oneshot.py and vulnwsc.txt from GitHub
@@ -238,8 +238,8 @@ Advanced:
 
 | File | Description |
 |------|-------------|
-| `oneshot.py` | Main tool — single-file WPS attack script |
-| `ap_mode.py` | AP Mode — Evil Twin / Captive Portal / DNS Logger |
+| `oneshot.py` | OPX-wifi4 main tool — single-file WPS attack script |
+| `ap_mode.py` | OPX-wifi4 AP Mode — Evil Twin / Captive Portal / DNS Logger |
 | `vulnwsc.txt` | Vulnerable device models database (600+ entries) |
 | `install.sh` | Universal Linux installer |
 | `captive_portal/templates/login.html` | Default captive portal login page |
@@ -279,6 +279,8 @@ AP Mode requires `hostapd` and `dnsmasq` to be installed. The installer will att
 
 The captive portal catalog includes templates cloned from [flipper-portals](https://github.com/L-ubu/flipper-portals) and [evil-portal](https://github.com/bigbrodude6119/flipper-zero-evil-portal), plus custom templates for social media, payment, cloud, and streaming services.
 
-## 📜 License
+## License
 
-GPLv2 — See [LICENSE](LICENSE) for details.
+OPX-wifi4 Non-Commercial Copyleft License — see `LICENSE`.
+
+Free for personal and educational use. Commercial use, paid redistribution, closed-source forks, relicensing, and takedown/impersonation of this project are prohibited.

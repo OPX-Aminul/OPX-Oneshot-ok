@@ -1873,7 +1873,7 @@ def addVulnerableAP(network_info, vuln_list_file):
 
 def usage():
     return """
-OneShotPin 0.0.2 (c) 2017 rofl0r, modded by drygdryg
+OPX-wifi4 (based on OneShotPin 0.0.2)
 
 %(prog)s <arguments>
 
@@ -1909,7 +1909,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='OneShotPin 0.0.2 (c) 2017 rofl0r, modded by drygdryg',
+        description='OPX-wifi4 (based on OneShotPin 0.0.2)',
         epilog='Example: %(prog)s -i wlan0 -b 00:90:4C:C1:AC:21 -K'
         )
 
@@ -2033,7 +2033,7 @@ if __name__ == '__main__':
 
     # ── Startup banner ──
     RealtimeLogger.separator()
-    RealtimeLogger.info('OPX OneShot starting up')
+    RealtimeLogger.info('OPX-wifi4 starting up')
     if args.verbose:
         RealtimeLogger.info('Verbose mode ON — all wpa_supplicant output will be shown live')
 
@@ -2118,4 +2118,4 @@ if __name__ == '__main__':
         wmtWifi_device.write_text("0")
 
     RealtimeLogger.separator()
-    RealtimeLogger.info('OPX OneShot finished')
+    RealtimeLogger.info('OPX-wifi4 finished')
