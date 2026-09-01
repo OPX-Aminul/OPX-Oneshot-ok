@@ -750,6 +750,55 @@ class Companion:
         self.bssid = bssid
         self.lastPwr = 0
         self.disconnect_count = 0
+        self.frequency = None
+
+    def set_target_frequency(self, freq):
+        """Lock wpa_supplicant scanning to a single target frequency (MHz).
+
+        Without this, wpa_supplicant's internal scan hops across all channels
+        with short dwell times and often fails to find even a high-signal AP,
+        which shows up as the 'scan ok, then attack can't find the router'
+        problem. A per-frequency scan_freq line makes the WPS_REG scan hit the
+        router instantly.
+        """
+        if not freq:
+            return
+        self.frequency = int(freq)
+        try:
+            with open(self.tempconf, 'r', encoding='utf-8') as f:
+                conf = f.read()
+        except OSError:
+            return
+        lines = [ln for ln in conf.splitlines() if not ln.startswith('scan_freq=')]
+        lines.append(f'scan_freq={self.frequency}')
+        try:
+            with open(self.tempconf, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+        except OSError as e:
+            RealtimeLogger.err(f'Could not write scan_freq: {e}')
+            return
+        try:
+            r = self.sendAndReceive('RECONFIGURE')
+        except OSError:
+            r = ''
+        if 'OK' in r:
+            RealtimeLogger.ok(f'wpa_supplicant locked to frequency {self.frequency} MHz')
+        else:
+            RealtimeLogger.warn('Could not reconfigure wpa_supplicant (frequency hint skipped)')
+
+    def clear_target_frequency(self):
+        if self.frequency is None:
+            return
+        self.frequency = None
+        try:
+            with open(self.tempconf, 'r', encoding='utf-8') as f:
+                conf = f.read()
+            lines = [ln for ln in conf.splitlines() if not ln.startswith('scan_freq=')]
+            with open(self.tempconf, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            self.sendAndReceive('RECONFIGURE')
+        except OSError:
+            pass
 
     def __init_wpa_supplicant(self):
         cmd = 'wpa_supplicant -K -d -Dnl80211,wext,hostapd,wired -i{} -c{}'.format(self.interface, self.tempconf)
@@ -1316,6 +1365,17 @@ class Companion:
             pass
 
 
+def freq_to_channel(freq):
+    """Convert a MHz frequency to the IEEE 802.11 channel number (or None)."""
+    if not freq:
+        return None
+    if 2412 <= freq <= 2484:      # 2.4 GHz band
+        return (freq - 2412) // 5 + 1
+    if 5000 <= freq <= 5900:      # 5 GHz band
+        return (freq - 5000) // 5
+    return None
+
+
 class WiFiScanner:
     """docstring for WiFiScanner"""
     def __init__(self, interface, vuln_list=None):
@@ -1351,10 +1411,16 @@ class WiFiScanner:
                         'WPS locked': False,
                         'Model': '',
                         'Model number': '',
-                        'Device name': ''
+                        'Device name': '',
+                        'Channel': ''
                      }
                 )
             networks[-1]['BSSID'] = result.group(1).upper()
+
+        def handle_freq(line, result, networks):
+            freq = int(float(result.group(1)))
+            networks[-1]['Frequency'] = freq
+            networks[-1]['Channel'] = freq_to_channel(freq)
 
         def handle_essid(line, result, networks):
             d = result.group(1)
@@ -1425,6 +1491,7 @@ class WiFiScanner:
         networks = []
         matchers = {
             re.compile(r'BSS (\S+)( )?\(on \w+\)'): handle_network,
+            re.compile(r'freq: ([+-]?([0-9]*[.])?[0-9]+)( MHz)?'): handle_freq,
             re.compile(r'SSID: (.*)'): handle_essid,
             re.compile(r'signal: ([+-]?([0-9]*[.])?[0-9]+) dBm'): handle_level,
             re.compile(r'(capability): (.+)'): handle_securityType,
@@ -1687,21 +1754,20 @@ class WiFiScanner:
             bssid_pad = W - len(bssid) - 18
             print(bc + '\u2502\033[0m  \033[90mMAC:\033[0m   \033[93m' + bssid + '\033[0m' + ' ' * max(0, bssid_pad) + bc + '\u2502\033[0m')
 
-            # Signal + WPS version
+            # Channel + WPS version + signal
+            ch = network.get('Channel')
+            ch_badge = ('\033[90mCH:\033[0m \033[97m{}\033[0m'.format(ch)) if ch else ''
             sig = signal_bar(level, 20)
-            # calculate visible width: "SIGNAL: " = 8, bar ~20+4+4=28, "  " = 2, badge ~10, rest to fill
             sig_line = '\033[90mSIGNAL:\033[0m ' + sig + '    ' + wps_badge
+            if ch_badge:
+                sig_line = ch_badge + '   ' + sig_line
             sig_visible = 8 + 20 + 1 + 3 + 1 + 4 + len(_strip_ansi(wps_badge))
+            if ch_badge:
+                sig_visible += len(_strip_ansi(ch_badge)) + 3
             sig_pad = W - sig_visible - 6
             if sig_pad > 0:
                 sig_line += ' ' * sig_pad
             print(bc + '\u2502\033[0m  ' + sig_line + '  ' + bc + '\u2502\033[0m')
-
-            # Security
-            sec_str = sec_icon(sec)
-            sec_visible = 8 + len(_strip_ansi(sec_str))
-            sec_pad = W - sec_visible - 6
-            print(bc + '\u2502\033[0m  \033[90mSEC:\033[0m    ' + sec_str + ' ' * max(0, sec_pad) + bc + '\u2502\033[0m')
 
             # Device info
             dev_info = '{} {}'.format(model_name, model_num).strip()
@@ -2122,6 +2188,7 @@ if __name__ == '__main__':
 
     while True:
         try:
+            network_info = None
             companion = Companion(args.interface, args.write, print_debug=args.verbose)
             if args.pbc:
                 RealtimeLogger.info('PBC mode — connecting via push button')
@@ -2147,6 +2214,8 @@ if __name__ == '__main__':
 
                 if args.bssid:
                     companion = Companion(args.interface, args.write, print_debug=args.verbose)
+                    if isinstance(network_info, dict):
+                        companion.set_target_frequency(network_info.get('Frequency'))
                     if args.bruteforce:
                         RealtimeLogger.info(f'Starting bruteforce attack on {args.bssid}')
                         companion.smart_bruteforce(args.bssid, args.pin, args.delay)
