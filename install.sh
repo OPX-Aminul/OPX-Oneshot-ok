@@ -55,10 +55,10 @@ install_packages() {
             apt-get install -y -qq python3 python3-pip python3-dev \
                 git iw wpa_supplicant pixiewps iproute2 wcwidth \
                 hostapd dnsmasq iptables iptables-persistent \
-                net-tools wireless-tools 2>/dev/null || \
+                net-tools wireless-tools openssl 2>/dev/null || \
             apt-get install -y python3 python3-pip python3-dev \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq iptables net-tools wireless-tools 2>/dev/null || \
+                hostapd dnsmasq iptables net-tools wireless-tools openssl 2>/dev/null || \
             warn "Some packages could not be installed"
             ;;
         alpine)
@@ -73,11 +73,11 @@ install_packages() {
             apk add --no-cache \
                 python3 py3-pip python3-dev \
                 git iw wireless-tools wpa_supplicant iproute2 \
-                hostapd dnsmasq iptables 2>/dev/null || \
+                hostapd dnsmasq iptables openssl 2>/dev/null || \
             apk add --no-cache \
                 python3 py3-pip \
                 git iw wpa_supplicant iproute2 \
-                hostapd dnsmasq iptables 2>/dev/null || \
+                hostapd dnsmasq iptables openssl 2>/dev/null || \
             warn "Some Alpine packages could not be installed — hostapd/dnsmasq may need community repo"
             ;;
         arch|manjaro|endeavouros)
