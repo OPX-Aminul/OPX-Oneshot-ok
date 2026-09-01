@@ -837,8 +837,7 @@ def setup_captive_portal_firewall(ap_interface: str):
     """Block ALL outbound traffic from AP clients EXCEPT DNS/HTTP to our portal.
 
     This forces captive portal detection to work correctly:
-    - REJECTS Private DNS (port 853) with TCP RST → instant failure → plain DNS fallback
-    - REJECTS all external DNS (port 53 to non-local) → forced through our dnsmasq
+    - DNAT ALL DNS (port 53 + 853) → our dnsmasq — even Private DNS goes through us
     - Blocks all internet traffic so phones stay in captive portal mode
     - Only allows DHCP, DNS (to us), and HTTP/HTTPS (to us)
     """
@@ -848,37 +847,55 @@ def setup_captive_portal_firewall(ap_interface: str):
         subprocess.run(["iptables", "-F"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-t", "nat", "-F"], capture_output=True, timeout=5)
 
-        # Allow DHCP
+        # ── DHCP ─────────────────────────────────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "67:68", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # Allow DNS (UDP + TCP) to our AP — forces all DNS through our dnsmasq
+        # ── CRITICAL: DNAT ALL DNS to our dnsmasq ────────────
+        # This is the KEY fix: when Private DNS (port 853) is enabled,
+        # the phone tries dns.adguard.com:853 (DoT).
+        # We redirect ALL port 853 traffic → our dnsmasq on port 53.
+        # dnsmasq responds with plain DNS → phone gets the answer.
+        # Even though TLS handshake fails, Android falls back to plain DNS
+        # using the response we sent.
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "udp", "--dport", "53",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "tcp", "--dport", "53",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+        # Private DNS (DoT) port 853 → redirect to our dnsmasq port 53
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "tcp", "--dport", "853",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+        subprocess.run([
+            "iptables", "-t", "nat", "-A", "PREROUTING",
+            "-i", ap_interface, "-p", "udp", "--dport", "853",
+            "-j", "DNAT", "--to-destination", f"{AP_IP}:53"
+        ], capture_output=True, timeout=5)
+        # DoH (DNS over HTTPS) port 443 → redirect to our portal
+        # (HTTPS server on 443 handles it with self-signed cert)
+
+        # ── Allow HTTP + HTTPS to our portal server ───────────
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
+        # Allow DNS (after DNAT, packets arrive at port 53 on our IP)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "ACCEPT"], capture_output=True, timeout=5)
 
-        # Allow HTTP (port 80) and HTTPS (port 443) to our captive portal server
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "80", "-j", "ACCEPT"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "443", "-j", "ACCEPT"], capture_output=True, timeout=5)
-
-        # REJECT Private DNS (port 853) with TCP RST — INSTANT failure
-        # This makes Android/ChromeOS fall back to plain DNS immediately
-        # DO NOT REDIRECT — TLS handshake mismatch causes hangs/timeout
-        # REJECT sends TCP RST → instant "Connection refused" → clean fallback
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "tcp", "--dport", "853", "-j", "REJECT", "--reject-with", "tcp-reset"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-p", "udp", "--dport", "853", "-j", "REJECT"], capture_output=True, timeout=5)
-
-        # Block ALL external DNS (port 53) forwarding — force through our dnsmasq
-        # Phone should NEVER reach 8.8.8.8, 1.1.1.1, dns.adguard.com, etc.
-        subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-p", "udp", "--dport", "53", "-j", "REJECT"], capture_output=True, timeout=5)
-        subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-p", "tcp", "--dport", "53", "-j", "REJECT", "--reject-with", "tcp-reset"], capture_output=True, timeout=5)
-
-        # Block ALL forwarding (internet)
+        # ── Block ALL forwarding (internet) ───────────────────
         subprocess.run(["iptables", "-A", "FORWARD", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
         subprocess.run(["iptables", "-A", "FORWARD", "-o", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
 
-        # Block all other INPUT from AP (except what we allowed above)
+        # ── Block all other INPUT from AP ─────────────────────
         subprocess.run(["iptables", "-A", "INPUT", "-i", ap_interface, "-j", "DROP"], capture_output=True, timeout=5)
 
-        RealtimeLogger.ok("Captive portal firewall active — Private DNS REJECTED (instant fallback), all traffic forced through dnsmasq")
+        RealtimeLogger.ok("Captive portal firewall active — ALL DNS (53+853) DNAT'd to our dnsmasq")
         return True
     except Exception as e:
         RealtimeLogger.warn(f"Firewall setup failed: {e}")
