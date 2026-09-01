@@ -250,19 +250,38 @@
     .horizon::-webkit-scrollbar { height: 2px; }
     .horizon::-webkit-scrollbar-thumb { background: var(--gold); }
     .shot {
-      flex: 0 0 min(78vw, 420px); scroll-snap-align: start;
-      aspect-ratio: 4/5; border: 1px solid var(--line); padding: 24px;
-      display: flex; flex-direction: column; justify-content: flex-end;
-      background:
-        linear-gradient(180deg, transparent 20%, rgba(5,7,11,.92)),
-        radial-gradient(circle at 30% 20%, rgba(126,232,255,.25), transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(232,195,138,.18), transparent 42%),
-        #0b1018;
-      animation: mesh 10s ease-in-out infinite alternate;
+      flex: 0 0 min(82vw, 380px); scroll-snap-align: start;
+      min-height: 460px; border: 1px solid var(--line); padding: 0;
+      display: flex; flex-direction: column;
+      background: #0b1018; overflow: hidden; position: relative;
     }
-    @keyframes mesh {
-      from { filter: saturate(1); }
-      to { filter: saturate(1.25) contrast(1.05); }
+    .shot-art {
+      flex: 1; min-height: 260px; position: relative; overflow: hidden;
+    }
+    .shot-art svg { width: 100%; height: 100%; display: block; }
+    .shot-meta {
+      padding: 22px 22px 26px; border-top: 1px solid var(--line);
+      background: #080b12;
+    }
+    .shot-meta h3 { font-size: 26px; margin: 6px 0 8px; font-weight: 500; }
+    .shot-meta p { color: var(--muted); font-size: 14px; line-height: 1.5; font-weight: 300; }
+    .shot-num {
+      position: absolute; top: 18px; right: 18px; z-index: 2;
+      font-family: "Instrument Serif", serif; font-size: 56px; line-height: 1;
+      color: rgba(244,239,230,.92);
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(2px);
+      animation: float 8s ease-in-out infinite;
+    }
+    .shot:nth-child(1) .shot-art { background: radial-gradient(circle at 30% 20%, #1a3a4a, #0b1018 70%); }
+    .shot:nth-child(2) .shot-art { background: radial-gradient(circle at 70% 30%, #3a2a14, #0b1018 70%); }
+    .shot:nth-child(3) .shot-art { background: radial-gradient(circle at 40% 60%, #14283a, #0b1018 70%); }
+    .shot:nth-child(4) .shot-art { background: radial-gradient(circle at 60% 20%, #2a1830, #0b1018 70%); }
+    .shot:nth-child(5) .shot-art { background: radial-gradient(circle at 50% 50%, #1a2e22, #0b1018 70%); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-14px) scale(1.06); }
     }
     footer {
       padding: 80px 6vw calc(40px + var(--safe-b));
@@ -411,11 +430,99 @@
       <p class="kicker reveal">Catalog</p>
       <h2 class="reveal" style="margin-bottom:36px">Two hundred eight stages.</h2>
       <div class="horizon">
-        <div class="shot reveal"><span class="idx">SOCIAL</span><h3>46 identities</h3></div>
-        <div class="shot reveal"><span class="idx">TRANSIT</span><h3>Rails & airlines</h3></div>
-        <div class="shot reveal"><span class="idx">CARRIERS</span><h3>EU & US ISPs</h3></div>
-        <div class="shot reveal"><span class="idx">SPACES</span><h3>Hotels, gyms, parks</h3></div>
-        <div class="shot reveal"><span class="idx">CLOUDS</span><h3>Banks & hyperscalers</h3></div>
+        <article class="shot reveal">
+          <div class="shot-art">
+            <span class="shot-num">46</span>
+            <span class="orb" style="width:140px;height:140px;left:12%;top:28%;background:rgba(126,232,255,.28);animation-delay:-1s"></span>
+            <span class="orb" style="width:72px;height:72px;right:18%;top:18%;background:rgba(232,195,138,.35);animation-delay:-3s"></span>
+            <svg viewBox="0 0 380 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g fill="none" stroke="rgba(126,232,255,.45)" stroke-width="1.2">
+                <circle cx="190" cy="130" r="38"/>
+                <circle cx="190" cy="130" r="70"/>
+                <circle cx="190" cy="130" r="108"/>
+                <path d="M80 130h220M190 20v220"/>
+              </g>
+              <circle cx="190" cy="130" r="8" fill="#7ee8ff"/>
+              <circle cx="260" cy="80" r="4" fill="#e8c38a"/>
+              <circle cx="120" cy="170" r="3" fill="#f4efe6"/>
+            </svg>
+          </div>
+          <div class="shot-meta">
+            <span class="idx">01 / SOCIAL</span>
+            <h3>46 identities</h3>
+            <p>YouTube, Instagram, WhatsApp, TikTok, Discord, Netflix, Spotify, Steam.</p>
+          </div>
+        </article>
+        <article class="shot reveal">
+          <div class="shot-art">
+            <span class="shot-num">51</span>
+            <span class="orb" style="width:160px;height:160px;right:8%;top:20%;background:rgba(232,195,138,.22)"></span>
+            <svg viewBox="0 0 380 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <path d="M40 200 L190 70 L340 200" fill="none" stroke="#e8c38a" stroke-width="1.4"/>
+              <path d="M90 200 L190 110 L290 200" fill="none" stroke="rgba(244,239,230,.35)" stroke-width="1"/>
+              <rect x="168" y="150" width="44" height="50" fill="none" stroke="#7ee8ff"/>
+              <path d="M40 210h300" stroke="rgba(255,255,255,.2)"/>
+            </svg>
+          </div>
+          <div class="shot-meta">
+            <span class="idx">02 / TRANSIT</span>
+            <h3>Rails & airlines</h3>
+            <p>SNCF, Deutsche Bahn, British Airways, Ryanair, EasyJet, Delta, United.</p>
+          </div>
+        </article>
+        <article class="shot reveal">
+          <div class="shot-art">
+            <span class="shot-num">22</span>
+            <span class="orb" style="width:120px;height:120px;left:20%;bottom:10%;background:rgba(126,232,255,.2);animation-delay:-2s"></span>
+            <svg viewBox="0 0 380 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <polyline points="40,180 90,140 140,155 200,90 250,120 340,60" fill="none" stroke="#7ee8ff" stroke-width="1.6"/>
+              <circle cx="200" cy="90" r="6" fill="#e8c38a"/>
+              <circle cx="90" cy="140" r="4" fill="#7ee8ff"/>
+              <circle cx="340" cy="60" r="5" fill="#f4efe6"/>
+              <path d="M40 210h300" stroke="rgba(255,255,255,.15)"/>
+            </svg>
+          </div>
+          <div class="shot-meta">
+            <span class="idx">03 / CARRIERS</span>
+            <h3>EU & US ISPs</h3>
+            <p>Proximus, Vodafone, Orange, Verizon, AT&amp;T, T-Mobile, Spectrum.</p>
+          </div>
+        </article>
+        <article class="shot reveal">
+          <div class="shot-art">
+            <span class="shot-num">36</span>
+            <span class="orb" style="width:150px;height:150px;left:10%;top:16%;background:rgba(255,139,122,.18)"></span>
+            <svg viewBox="0 0 380 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <rect x="90" y="80" width="200" height="120" fill="none" stroke="rgba(244,239,230,.4)"/>
+              <rect x="120" y="50" width="140" height="30" fill="none" stroke="#e8c38a"/>
+              <line x1="140" y1="110" x2="240" y2="110" stroke="rgba(126,232,255,.5)"/>
+              <line x1="140" y1="130" x2="210" y2="130" stroke="rgba(126,232,255,.3)"/>
+              <line x1="140" y1="150" x2="230" y2="150" stroke="rgba(126,232,255,.3)"/>
+            </svg>
+          </div>
+          <div class="shot-meta">
+            <span class="idx">04 / SPACES</span>
+            <h3>Hotels, gyms, parks</h3>
+            <p>Hilton, Sheraton, Basic-Fit, Disneyland Paris, IKEA, Tesco.</p>
+          </div>
+        </article>
+        <article class="shot reveal">
+          <div class="shot-art">
+            <span class="shot-num">53</span>
+            <span class="orb" style="width:130px;height:130px;right:16%;top:30%;background:rgba(126,232,255,.22);animation-delay:-4s"></span>
+            <svg viewBox="0 0 380 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <ellipse cx="190" cy="140" rx="110" ry="36" fill="none" stroke="#7ee8ff"/>
+              <ellipse cx="190" cy="140" rx="70" ry="22" fill="none" stroke="#e8c38a"/>
+              <circle cx="190" cy="140" r="10" fill="#f4efe6"/>
+              <path d="M190 40v200" stroke="rgba(255,255,255,.2)"/>
+            </svg>
+          </div>
+          <div class="shot-meta">
+            <span class="idx">05 / CLOUDS</span>
+            <h3>Banks & hyperscalers</h3>
+            <p>Stripe, Revolut, AWS, Azure, Cloudflare, Google Cloud, Apple.</p>
+          </div>
+        </article>
       </div>
       <div class="cats reveal">
         <span class="chip">Social media</span><span class="chip">Airlines</span><span class="chip">Rail</span>
