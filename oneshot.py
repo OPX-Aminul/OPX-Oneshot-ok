@@ -1355,6 +1355,19 @@ class WiFiScanner:
             if ver:
                 networks[-1]['WPS version'] = ver
 
+        def handle_wps2(line, result, networks):
+            networks[-1]['WPS'] = True
+            ver2 = result.group(1).strip()
+            if ver2:
+                # Prefer the higher WPS capability version when both are reported.
+                try:
+                    cur = float(networks[-1].get('WPS version', '1.0'))
+                    new = float(ver2)
+                except ValueError:
+                    cur, new = 1.0, 2.0
+                if new > cur:
+                    networks[-1]['WPS version'] = ver2
+
         def handle_wpsLocked(line, result, networks):
             flag = int(result.group(1), 16)
             if flag:
@@ -1383,14 +1396,14 @@ class WiFiScanner:
             re.compile(r'SSID: (.*)'): handle_essid,
             re.compile(r'signal: ([+-]?([0-9]*[.])?[0-9]+) dBm'): handle_level,
             re.compile(r'(capability): (.+)'): handle_securityType,
-            re.compile(r'(RSN):\t \[\*\] Version: (\d+)'): handle_securityType,
-            re.compile(r'(WPA):\t \[\*\] Version: (\d+)'): handle_securityType,
-            re.compile(r'WPS:\t \[\*\] Version: (([0-9]*[.])?[0-9]+)'): handle_wps,
-            re.compile(r' \[\*\] Authentication suites: (.+)'): handle_securityType,
+            re.compile(r'(RSN|WPA):\s*\*+\s*Version:\s+(\d+)'): handle_securityType,
+            re.compile(r'WPS:\s*\*+\s*Version:\s+(([0-9]*[.])?[0-9]+)'): handle_wps,
+            re.compile(r'^\s*\*+\s*Version2:\s+(([0-9]*[.])?[0-9]+)'): handle_wps2,
+            re.compile(r'^\s*\*+\s*Authentication suites:\s+(.+)\s*'): handle_securityType,
             re.compile(r' \[\*\] AP setup locked: (0x[0-9]+)'): handle_wpsLocked,
-            re.compile(r' \[\*\] Model: (.*)'): handle_model,
-            re.compile(r' \[\*\] Model Number: (.*)'): handle_modelNumber,
-            re.compile(r' \[\*\] Device name: (.*)'): handle_deviceName
+            re.compile(r'^\s*\*+\s*Model:\s+(.*)'): handle_model,
+            re.compile(r'^\s*\*+\s*Model Number:\s+(.*)'): handle_modelNumber,
+            re.compile(r'^\s*\*+\s*Device name:\s+(.*)'): handle_deviceName
         }
 
         for line in lines:
@@ -1403,13 +1416,9 @@ class WiFiScanner:
                 if res:
                     handler(line, res, networks)
 
-        # Filtering non-WPS networks
-        networks = list(filter(lambda x: bool(x['WPS']), networks))
-        if not networks:
-            return False
-
-        # Sorting by signal level
-        networks.sort(key=lambda x: x['Level'], reverse=True)
+        # Show every scanned network so the user can still try manually even
+        # when no WPS device is advertised; WPS-enabled ones float to the top.
+        networks.sort(key=lambda x: (not x.get('WPS'), x.get('Level', 0)), reverse=True)
 
         # Putting a list of networks in a dictionary, where each key is a network number in list of networks
         network_list = {(i + 1): network for i, network in enumerate(networks)}
@@ -1661,7 +1670,7 @@ class WiFiScanner:
     def prompt_network(self):
         networks = self.iw_scanner()
         if not networks:
-            RealtimeLogger.err('No WPS networks found.')
+            RealtimeLogger.err('No Wi-Fi networks found. Check the interface and try again.')
             return None
         while 1:
             try:
