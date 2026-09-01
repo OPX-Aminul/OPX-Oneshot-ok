@@ -228,7 +228,7 @@ create_wifi4() {
 TOOL_DIR="/opt/oneshot"
 TOOL="$TOOL_DIR/oneshot.py"
 VULN_FILE="$TOOL_DIR/vulnwsc.txt"
-REPO_RAW="https://raw.githubusercontent.com/OPX-Aminul/OPX-Oneshot-ok/main"
+REPO_RAW="https://raw.githubusercontent.com/OPX-Aminul/OPX-wifi4/main"
 TMP_DIR=$(mktemp -d)
 
 cleanup() { rm -rf "$TMP_DIR"; }
@@ -259,11 +259,11 @@ if [ "$UPDATE_MODE" -eq 1 ]; then
     fi
 
     echo -e "\033[1;32m[*] Cloning latest version from GitHub...\033[0m"
-    echo -e "\033[90m    Repo: OPX-Aminul/OPX-Oneshot-ok\033[0m"
+    echo -e "\033[90m    Repo: OPX-Aminul/OPX-wifi4\033[0m"
     echo ""
 
     CLONE_DIR="$TMP_DIR/wifi4_update"
-    git clone --depth 1 https://github.com/OPX-Aminul/OPX-Oneshot-ok.git "$CLONE_DIR" 2>/dev/null
+    git clone --depth 1 https://github.com/OPX-Aminul/OPX-wifi4.git "$CLONE_DIR" 2>/dev/null
     if [ $? -ne 0 ]; then
         echo -e "\033[1;31m[!] Failed to clone repository. Check your internet connection.\033[0m"
         exit 1

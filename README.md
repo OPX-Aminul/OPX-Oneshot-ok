@@ -50,8 +50,8 @@ OPX-wifi4 is a powerful WPS (Wi-Fi Protected Setup) penetration testing tool wit
 ## 🚀 Quick Install
 
 ```bash
-git clone https://github.com/OPX-Aminul/OPX-Oneshot-ok.git
-cd OPX-Oneshot-ok
+git clone https://github.com/OPX-Aminul/OPX-wifi4.git
+cd OPX-wifi4
 sudo bash install.sh
 ```
 
